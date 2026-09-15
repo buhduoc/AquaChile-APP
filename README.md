@@ -99,8 +99,8 @@ Las interfaces diseñadas responden a los componentes de **Material Design 3** y
 
 | Nombre y Apellido   | Rol en el Proyecto         |
 | ------------------- | -------------------------- |
-| Nicolas Oyarzo      | Desarrollo / Diseño        |
-| Alexander Gutierrez | Desarrollo / Documentación |
-| Matias Mansilla     | Desarrollo / UML           |
+| Nicolas Oyarzo      | Desarrollo        |
+| Alexander Gutierrez | Desarrollo  |
+| Matias Mansilla     | Desarrollo            |
 
 ---
