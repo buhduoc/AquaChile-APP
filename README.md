@@ -1,5 +1,4 @@
-```
- AquaChile APP - Pre-Chequeo de Seguridad en Operaciones de Buceo
+AquaChile APP - Pre-Chequeo de Seguridad en Operaciones de Buceo
 
 &gt; **Caso académico:** AquaCheck Buceo / AquaChile APP  
 &gt; **Asignatura:** DSY1105 - Desarrollo de Aplicaciones Móviles  
