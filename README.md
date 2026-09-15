@@ -1,8 +1,8 @@
 AquaChile APP - Pre-Chequeo de Seguridad en Operaciones de Buceo
 
 &gt; **Caso académico:** AquaCheck Buceo / AquaChile APP  
-&gt; **Asignatura:** DSY1105 - Desarrollo de Aplicaciones Móviles  
-&gt; **Institución:** CITT Duoc UC Sede Puerto Montt  
+&gt; **Asignatura:** Desarrollo de Aplicaciones Móviles  
+&gt; **Institución:** Duoc UC Sede Puerto Montt  
 &gt; **Socio Formador:** AquaChile  
 
 ---
