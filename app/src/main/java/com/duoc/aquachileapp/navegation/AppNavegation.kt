@@ -172,12 +172,15 @@ fun AppNavigation(
 
                             onClick = {
                                 navController.navigate("home") {
-                                    launchSingleTop = true
-                                    popUpTo("home") {
-                                        saveState = true
+                                    //Evita acumular las pantallas anteriores
+                                    popUpTo("home"){
+                                        inclusive = false
                                     }
-                                    restoreState = true
+                                    //evita abrir varias veces home
+                                    launchSingleTop = true
+
                                 }
+
                             }
                         )
 
