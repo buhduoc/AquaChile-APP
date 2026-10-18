@@ -6,8 +6,8 @@ import com.duoc.aquachileapp.model.ItemChecklist
 
 class AquaCheckViewmodel: ViewModel() {
     val checklist = mutableStateListOf(
-        ItemChecklist("Compresor", false),
-        ItemChecklist("Oxigeno", false),
+        ItemChecklist("Compresor", false, critico = true),
+        ItemChecklist("Oxigeno", false, critico = true),
         ItemChecklist("Señalizacion", false)
     )
 

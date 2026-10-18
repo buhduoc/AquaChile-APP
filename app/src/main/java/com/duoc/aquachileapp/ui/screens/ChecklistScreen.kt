@@ -15,11 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.duoc.aquachileapp.model.ItemChecklist
 import com.duoc.aquachileapp.viewmodel.AquaCheckViewmodel
 
 
 @Composable
 fun ChecklistScreen(
+    onGuardar: (List<ItemChecklist>) -> Unit,
     viewModel: AquaCheckViewmodel = viewModel()
 ) {
 
@@ -29,15 +31,14 @@ fun ChecklistScreen(
             .padding(16.dp)
     ) {
 
-        // Título de la pantalla
         Text(
             text = "Inspección de Equipos en Terreno",
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        // Lista de equipos
         LazyColumn(
+            modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
@@ -82,7 +83,6 @@ fun ChecklistScreen(
                             )
                         }
 
-                        // Botón para cambiar el estado
                         Button(
                             onClick = {
                                 viewModel.cambiarEstado(index)
@@ -117,6 +117,17 @@ fun ChecklistScreen(
                     }
                 }
             }
+        }
+
+        Button(
+            onClick = {
+                onGuardar(viewModel.checklist.toList())
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp)
+        ) {
+            Text("Guardar pre-chequeo")
         }
     }
 }

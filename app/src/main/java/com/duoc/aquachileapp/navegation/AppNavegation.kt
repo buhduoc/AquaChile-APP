@@ -1,6 +1,5 @@
 package com.duoc.aquachileapp.navegation
 
-
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
@@ -16,33 +15,32 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
 import com.duoc.aquachileapp.model.AppSection
 import com.duoc.aquachileapp.ui.screens.*
+import com.duoc.aquachileapp.viewmodel.CuentasViewModel
+import com.duoc.aquachileapp.viewmodel.HistorialViewModel
 import com.duoc.aquachileapp.viewmodel.HomeViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigation(
-    vm: HomeViewModel = viewModel()
+    vm: HomeViewModel = viewModel(),
+    historial: HistorialViewModel = viewModel(),
+    cuentas: CuentasViewModel = viewModel()
 ) {
 
-    // Controlador de navegación
     val navController = rememberNavController()
 
-    // Detecta la pantalla actual
     val backStackEntry by navController.currentBackStackEntryAsState()
     val rutaActual = backStackEntry?.destination?.route
 
-    // No mostrar menú en Login
-    val mostrarMenu = rutaActual != "login"
+    val mostrarMenu = rutaActual != null && rutaActual != "login" && rutaActual != "registro"
 
-    // Estado del menú hamburguesa
     val drawerState = rememberDrawerState(
         initialValue = DrawerValue.Closed
     )
 
     val scope = rememberCoroutineScope()
 
-    // MENÚ LATERAL
     ModalNavigationDrawer(
         drawerState = drawerState,
         gesturesEnabled = mostrarMenu,
@@ -60,7 +58,9 @@ fun AppNavigation(
 
                     HorizontalDivider()
 
-                    AppSection.entries.forEach { item ->
+                    AppSection.entries.filter {
+                        it != AppSection.APROBACIONES || vm.usuario?.esSupervisor == true
+                    }.forEach { item ->
 
                         NavigationDrawerItem(
                             label = {
@@ -71,6 +71,12 @@ fun AppNavigation(
                                 AppSection.PRECHEQUEO ->
                                     rutaActual == "prechequeo"
 
+                                AppSection.HISTORIAL ->
+                                    rutaActual == "historial"
+
+                                AppSection.APROBACIONES ->
+                                    rutaActual == "aprobaciones"
+
                                 AppSection.RESUMEN ->
                                     rutaActual == "resumen"
 
@@ -79,19 +85,24 @@ fun AppNavigation(
 
                             onClick = {
 
-                                // Actualiza el ViewModel
                                 vm.seleccionar(item)
 
                                 scope.launch {
 
-                                    // Cierra el menú
                                     drawerState.close()
 
-                                    // Navega según la opción
                                     when (item) {
 
                                         AppSection.PRECHEQUEO -> {
                                             navController.navigate("prechequeo")
+                                        }
+
+                                        AppSection.HISTORIAL -> {
+                                            navController.navigate("historial")
+                                        }
+
+                                        AppSection.APROBACIONES -> {
+                                            navController.navigate("aprobaciones")
                                         }
 
                                         AppSection.RESUMEN -> {
@@ -99,6 +110,7 @@ fun AppNavigation(
                                         }
 
                                         AppSection.SESION -> {
+                                            vm.cerrarSesion()
                                             navController.navigate("login") {
                                                 popUpTo("home") {
                                                     inclusive = true
@@ -118,7 +130,6 @@ fun AppNavigation(
 
         Scaffold(
 
-            // BARRA SUPERIOR COMPARTIDA
             topBar = {
 
                 if (mostrarMenu) {
@@ -147,20 +158,20 @@ fun AppNavigation(
                     )
                 }
             },
-            // BARRA INFERIOR
+
             bottomBar = {
 
                 if (mostrarMenu) {
 
                     NavigationBar {
 
-                        // INICIO
                         NavigationBarItem(
 
                             icon = {
                                 Icon(
                                     Icons.Default.Home,
-                                    contentDescription = "Inicio"
+                                    contentDescription = "Inicio",
+                                    modifier = Modifier.size(20.dp)
                                 )
                             },
 
@@ -172,26 +183,21 @@ fun AppNavigation(
 
                             onClick = {
                                 navController.navigate("home") {
-                                    //Evita acumular las pantallas anteriores
                                     popUpTo("home"){
                                         inclusive = false
                                     }
-                                    //evita abrir varias veces home
                                     launchSingleTop = true
-
                                 }
-
                             }
                         )
 
-
-                        // CHECKLIST
                         NavigationBarItem(
 
                             icon = {
                                 Icon(
                                     Icons.Default.List,
-                                    contentDescription = "Checklist"
+                                    contentDescription = "Checklist",
+                                    modifier = Modifier.size(20.dp)
                                 )
                             },
 
@@ -212,14 +218,13 @@ fun AppNavigation(
                             }
                         )
 
-
-                        // PERFIL
                         NavigationBarItem(
 
                             icon = {
                                 Icon(
                                     Icons.Default.Person,
-                                    contentDescription = "Perfil"
+                                    contentDescription = "Perfil",
+                                    modifier = Modifier.size(20.dp)
                                 )
                             },
 
@@ -246,47 +251,92 @@ fun AppNavigation(
 
         ) { padding ->
 
-            // NAVEGACIÓN ENTRE PANTALLAS
             NavHost(
                 navController = navController,
-                startDestination = "home",
-                modifier = Modifier.padding(padding)
+                startDestination = "login",
+                modifier = if (mostrarMenu) Modifier.padding(padding) else Modifier
             ) {
 
-                // HOME
                 composable("home") {
                     HomeScreen(
-                        navController = navController
+                        navController = navController,
+                        nombreUsuario = vm.usuario?.nombre ?: "usuario",
+                        esSupervisor = vm.usuario?.esSupervisor == true,
+                        historial = historial,
+                        cuentas = cuentas
                     )
                 }
 
-                // PRE-CHEQUEO
                 composable("prechequeo") {
                     PreChequeoScreen(
-                        onPreChequeo = {
+                        vm = historial,
+                        nombreSupervisor = vm.usuario?.nombre ?: "Sin supervisor",
+                        onContinuar = {
                             navController.navigate("checklist")
                         }
                     )
                 }
 
-                // CHECKLIST
                 composable("checklist") {
-                    ChecklistScreen()
+                    ChecklistScreen(
+                        onGuardar = { items ->
+                            historial.guardar(
+                                items = items,
+                                supervisor = vm.usuario?.nombre ?: "Sin supervisor"
+                            )
+                            navController.navigate("historial") {
+                                popUpTo("home")
+                            }
+                        }
+                    )
                 }
 
-                // RESUMEN
+                composable("historial") {
+                    HistorialScreen(
+                        vm = historial
+                    )
+                }
+
+                composable("aprobaciones") {
+                    if (vm.usuario?.esSupervisor == true) {
+                        AprobacionesScreen(cuentas = cuentas)
+                    } else {
+                        Text("Solo el supervisor puede aprobar cuentas")
+                    }
+                }
+
                 composable("resumen") {
                     Text("Pantalla de resumen")
                 }
 
-                //PERFIL
                 composable("perfil"){
                     Text("Pantalla de perfil")
                 }
 
-                // LOGIN
+                composable("registro") {
+                    RegistroScreen(
+                        cuentas = cuentas,
+                        onVolver = {
+                            navController.popBackStack()
+                        }
+                    )
+                }
+
                 composable("login") {
-                    Text("Pantalla de Login")
+                    LoginScreen(
+                        cuentas = cuentas,
+                        onCrearCuenta = {
+                            navController.navigate("registro")
+                        },
+                        onLoginExitoso = { usuario ->
+                            vm.iniciarSesion(usuario)
+                            navController.navigate("home") {
+                                popUpTo("login") {
+                                    inclusive = true
+                                }
+                            }
+                        }
+                    )
                 }
             }
         }

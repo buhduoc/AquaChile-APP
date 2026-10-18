@@ -15,7 +15,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AquaChileAppTheme {
-                ChecklistScreen()
                 AppNavigation()
             }
         }
