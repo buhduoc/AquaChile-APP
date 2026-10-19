@@ -9,6 +9,7 @@ import com.duoc.aquachileapp.model.ItemChecklist
 import com.duoc.aquachileapp.model.PreChequeo
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import com.duoc.aquachileapp.model.Estado
 
 class HistorialViewModel : ViewModel() {
 
@@ -42,7 +43,7 @@ class HistorialViewModel : ViewModel() {
     var centro by mutableStateOf("")
     var buzo by mutableStateOf("")
 
-    fun guardar(items: List<ItemChecklist>, supervisor: String) {
+    fun guardar(items: List<ItemChecklist>, supervisor: String, observaciones: String = "") {
         val fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))
 
         registros.add(
@@ -53,7 +54,8 @@ class HistorialViewModel : ViewModel() {
                 fecha = fecha,
                 buzo = buzo.ifBlank { "Sin buzo" },
                 supervisor = supervisor,
-                items = items
+                items = items,
+                observaciones = observaciones
             )
         )
 
@@ -62,8 +64,8 @@ class HistorialViewModel : ViewModel() {
     }
 
     private fun itemsDeEjemplo(compresor: Boolean, oxigeno: Boolean, senalizacion: Boolean) = listOf(
-        ItemChecklist("Compresor", compresor, critico = true),
-        ItemChecklist("Oxigeno", oxigeno, critico = true),
-        ItemChecklist("Señalizacion", senalizacion)
+        ItemChecklist("Compresor", if (compresor) Estado.CUMPLE else Estado.NO_CUMPLE, critico = true),
+        ItemChecklist("Oxigeno", if (oxigeno) Estado.CUMPLE else Estado.NO_CUMPLE, critico = true),
+        ItemChecklist("Señalizacion", if (senalizacion) Estado.CUMPLE else Estado.OBSERVADO)
     )
 }

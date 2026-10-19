@@ -279,10 +279,11 @@ fun AppNavigation(
 
                 composable("checklist") {
                     ChecklistScreen(
-                        onGuardar = { items ->
+                        onGuardar = { items, observaciones ->
                             historial.guardar(
                                 items = items,
-                                supervisor = vm.usuario?.nombre ?: "Sin supervisor"
+                                supervisor = vm.usuario?.nombre ?: "Sin supervisor",
+                                observaciones = observaciones
                             )
                             navController.navigate("historial") {
                                 popUpTo("home")
