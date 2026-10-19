@@ -47,7 +47,7 @@ class CuentasViewModel : ViewModel() {
         }
     }
 
-    private fun limpiar(usuario: String): String {
-        return usuario.trim().replace(".", "")
-    }
+private fun limpiar(usuario: String): String {
+    val texto = usuario.trim()
+    return if (texto.contains("@")) texto else texto.replace(".", "")
 }

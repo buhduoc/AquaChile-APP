@@ -205,10 +205,10 @@ fun AppNavigation(
                                 Text("Checklist")
                             },
 
-                            selected = rutaActual == "checklist",
+                            selected = rutaActual == "checklist" || rutaActual == "prechequeo"
 
                             onClick = {
-                                navController.navigate("checklist") {
+                                navController.navigate("prechequeo") {
                                     launchSingleTop = true
                                     popUpTo("home") {
                                         saveState = true
