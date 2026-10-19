@@ -51,3 +51,4 @@ private fun limpiar(usuario: String): String {
     val texto = usuario.trim()
     return if (texto.contains("@")) texto else texto.replace(".", "")
 }
+}

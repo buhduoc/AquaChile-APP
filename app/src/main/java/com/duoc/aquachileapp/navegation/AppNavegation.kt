@@ -205,7 +205,7 @@ fun AppNavigation(
                                 Text("Checklist")
                             },
 
-                            selected = rutaActual == "checklist" || rutaActual == "prechequeo"
+                            selected = rutaActual == "checklist" || rutaActual == "prechequeo",
 
                             onClick = {
                                 navController.navigate("prechequeo") {
