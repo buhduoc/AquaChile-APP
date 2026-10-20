@@ -21,6 +21,16 @@ class AquaCheckViewmodel : ViewModel() {
 
     var observaciones by mutableStateOf("")
 
+        val adjuntos = mutableStateListOf<String>()
+
+    fun agregarAdjunto(uri: String) {
+        if (uri !in adjuntos) adjuntos.add(uri)
+    }
+
+    fun quitarAdjunto(index: Int) {
+        adjuntos.removeAt(index)
+    }
+
     val completo: Boolean
         get() = checklist.all { it.estado != null }
 

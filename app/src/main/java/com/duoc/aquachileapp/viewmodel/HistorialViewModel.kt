@@ -43,7 +43,12 @@ class HistorialViewModel : ViewModel() {
     var centro by mutableStateOf("")
     var buzo by mutableStateOf("")
 
-    fun guardar(items: List<ItemChecklist>, supervisor: String, observaciones: String = "") {
+       fun guardar(
+        items: List<ItemChecklist>,
+        supervisor: String,
+        observaciones: String = "",
+        fotos: List<String> = emptyList()
+    ) {
         val fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))
 
         registros.add(
@@ -55,7 +60,8 @@ class HistorialViewModel : ViewModel() {
                 buzo = buzo.ifBlank { "Sin buzo" },
                 supervisor = supervisor,
                 items = items,
-                observaciones = observaciones
+                observaciones = observaciones,
+                fotos = fotos
             )
         )
 
