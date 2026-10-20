@@ -52,10 +52,9 @@ fun TarjetaPreChequeo(preChequeo: PreChequeo) {
             Text(preChequeo.fecha)
             Text("Supervisor: ${preChequeo.supervisor}")
             if (preChequeo.fotos.isNotEmpty()) {
-                Text("Adjuntos: ${preChequeo.fotos.size}")    
-            EtiquetaResultado(preChequeo.resultado)
-
+                Text("Adjuntos: ${preChequeo.fotos.size}")
             }
+            EtiquetaResultado(preChequeo.resultado)
         }
     }
 }

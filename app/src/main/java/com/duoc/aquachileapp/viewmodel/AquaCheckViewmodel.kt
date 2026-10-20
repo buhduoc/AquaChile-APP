@@ -15,13 +15,13 @@ class AquaCheckViewmodel : ViewModel() {
         ItemChecklist("Umbilical", critico = true),
         ItemChecklist("Oxigeno", critico = true),
         ItemChecklist("Buzo de emergencia", critico = true),
-        ItemChecklist("Comunicaciones"),
-        ItemChecklist("Señalizacion")
+        ItemChecklist("Comunicaciones", critico = false),
+        ItemChecklist("Señalizacion", critico = false)
     )
 
     var observaciones by mutableStateOf("")
 
-        val adjuntos = mutableStateListOf<String>()
+    val adjuntos = mutableStateListOf<String>()
 
     fun agregarAdjunto(uri: String) {
         if (uri !in adjuntos) adjuntos.add(uri)
@@ -32,7 +32,7 @@ class AquaCheckViewmodel : ViewModel() {
     }
 
     val completo: Boolean
-        get() = checklist.all { it.estado != null }
+        get() = checklist.all { it.estado != Estado.PENDIENTE }
 
     val requiereObservacion: Boolean
         get() = checklist.any { it.estado == Estado.NO_CUMPLE || it.estado == Estado.OBSERVADO }

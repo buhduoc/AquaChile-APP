@@ -274,10 +274,14 @@ fun AppNavigation(
 
                 composable("prechequeo") {
                     PreChequeoScreen(
-                        vm = historial,
-                        nombreSupervisor = vm.usuario?.nombre ?: "Sin supervisor",
-                        onContinuar = {
-                            navController.navigate("checklist")
+                        vm = nuevo,
+                        usuario = vm.usuario,
+                        onGuardar = { preChequeo ->
+                            historial.agregar(preChequeo)
+                            nuevo.limpiar()
+                            navController.navigate("historial") {
+                                popUpTo("home")
+                            }
                         }
                     )
                 }

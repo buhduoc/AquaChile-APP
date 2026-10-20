@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -61,13 +60,6 @@ fun HistorialScreen(
     ) {
 
         Text(
-            text = "Pre-chequeos realizados",
-            style = MaterialTheme.typography.titleLarge
-        )
-
-        Text(
-            text = "Toca uno para revisarlo",
-            modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
             text = "Historial de pre-chequeos",
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 12.dp)
@@ -124,7 +116,7 @@ fun HistorialScreen(
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(vm.registros) { preChequeo ->
+            items(filtrados) { preChequeo ->
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -132,8 +124,6 @@ fun HistorialScreen(
                 ) {
                     TarjetaPreChequeo(preChequeo)
                 }
-            items(filtrados) { preChequeo ->
-                TarjetaPreChequeo(preChequeo)
             }
         }
     }

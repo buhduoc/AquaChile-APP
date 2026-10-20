@@ -1,11 +1,16 @@
 package com.duoc.aquachileapp.viewmodel
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.duoc.aquachileapp.model.CHECKLIST
 import com.duoc.aquachileapp.model.Estado
 import com.duoc.aquachileapp.model.ItemChecklist
 import com.duoc.aquachileapp.model.PreChequeo
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class HistorialViewModel : ViewModel() {
 
@@ -65,10 +70,12 @@ class HistorialViewModel : ViewModel() {
             saturacion = 98,
             alertas = emptyList()
         )
+    }
+
     var centro by mutableStateOf("")
     var buzo by mutableStateOf("")
 
-        fun guardar(
+    fun guardar(
         items: List<ItemChecklist>,
         supervisor: String,
         observaciones: String = "",
@@ -86,7 +93,11 @@ class HistorialViewModel : ViewModel() {
                 supervisor = supervisor,
                 items = items,
                 observaciones = observaciones,
-                fotos = fotos
+                fotos = fotos,
+                sistolica = 120,
+                diastolica = 80,
+                saturacion = 98,
+                alertas = emptyList()
             )
         )
 
