@@ -68,7 +68,7 @@ class HistorialViewModel : ViewModel() {
     var centro by mutableStateOf("")
     var buzo by mutableStateOf("")
 
-       fun guardar(
+        fun guardar(
         items: List<ItemChecklist>,
         supervisor: String,
         observaciones: String = "",

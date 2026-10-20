@@ -1,19 +1,5 @@
 package com.duoc.aquachileapp.ui.screens
 
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.duoc.aquachileapp.model.Estado
-import com.duoc.aquachileapp.model.ItemChecklist
-import com.duoc.aquachileapp.viewmodel.AquaCheckViewmodel
-
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
