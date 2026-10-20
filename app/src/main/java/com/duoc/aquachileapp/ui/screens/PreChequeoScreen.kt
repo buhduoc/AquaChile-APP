@@ -1,5 +1,7 @@
 package com.duoc.aquachileapp.ui.screens
 
+import android.content.Context
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,9 +20,15 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import com.duoc.aquachileapp.model.PREGUNTAS_SALUD
 import com.duoc.aquachileapp.model.PreChequeo
 import com.duoc.aquachileapp.model.Usuario
@@ -29,6 +37,13 @@ import com.duoc.aquachileapp.ui.components.EtiquetaSalud
 import com.duoc.aquachileapp.ui.components.FilaChecklist
 import com.duoc.aquachileapp.ui.components.Fotos
 import com.duoc.aquachileapp.viewmodel.NuevoViewModel
+import java.io.File
+
+private fun crearUriFoto(context: Context): Uri {
+    val carpeta = File(context.cacheDir, "fotos").apply { mkdirs() }
+    val archivo = File.createTempFile("pre_", ".jpg", carpeta)
+    return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", archivo)
+}
 
 @Composable
 fun PreChequeoScreen(
@@ -36,9 +51,21 @@ fun PreChequeoScreen(
     usuario: Usuario?,
     onGuardar: (PreChequeo) -> Unit
 ) {
+    val context = LocalContext.current
+    var uriFotoTomada by rememberSaveable { mutableStateOf<Uri?>(null) }
 
     LaunchedEffect(Unit) {
         vm.prepararDatos(usuario)
+    }
+
+    val camaraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { exito ->
+        if (exito) {
+            uriFotoTomada?.let { uri ->
+                vm.fotos.add(uri.toString())
+            }
+        }
     }
 
     val selectorFotos = rememberLauncherForActivityResult(
@@ -88,14 +115,26 @@ fun PreChequeoScreen(
             style = MaterialTheme.typography.titleMedium
         )
 
-        OutlinedButton(
-            onClick = {
-                selectorFotos.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(
+                onClick = {
+                    val uri = crearUriFoto(context)
+                    uriFotoTomada = uri
+                    camaraLauncher.launch(uri)
+                }
+            ) {
+                Text("Tomar foto")
             }
-        ) {
-            Text("Agregar fotos")
+
+            OutlinedButton(
+                onClick = {
+                    selectorFotos.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                }
+            ) {
+                Text("Seleccionar de galería")
+            }
         }
 
         Fotos(vm.fotos)
