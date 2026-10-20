@@ -2,9 +2,11 @@ package com.duoc.aquachileapp.ui.screens
 
 import android.content.Context
 import android.net.Uri
+import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,8 +15,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -45,6 +52,28 @@ private fun crearUriFoto(context: Context): Uri {
     return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", archivo)
 }
 
+fun esImagen(context: Context, uriString: String): Boolean {
+    val uri = Uri.parse(uriString)
+    val mimeType = context.contentResolver.getType(uri)
+    if (mimeType != null) {
+        return mimeType.startsWith("image/")
+    }
+    val extension = uriString.substringAfterLast('.', "").lowercase()
+    return extension in listOf("jpg", "jpeg", "png", "webp", "gif", "bmp") ||
+            uriString.contains("fotos") || uriString.contains("pre_")
+}
+
+fun nombreArchivo(context: Context, uriString: String): String {
+    val uri = Uri.parse(uriString)
+    context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+        if (c.moveToFirst()) {
+            val i = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (i >= 0) return c.getString(i)
+        }
+    }
+    return uri.lastPathSegment ?: "Archivo adjunto"
+}
+
 @Composable
 fun PreChequeoScreen(
     vm: NuevoViewModel,
@@ -72,6 +101,17 @@ fun PreChequeoScreen(
         ActivityResultContracts.PickMultipleVisualMedia()
     ) { uris ->
         vm.fotos.addAll(uris.map { it.toString() })
+    }
+
+    val selectorArchivos = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetMultipleContents()
+    ) { uris ->
+        uris.forEach { uri ->
+            val str = uri.toString()
+            if (str !in vm.fotos) {
+                vm.fotos.add(str)
+            }
+        }
     }
 
     Column(
@@ -111,11 +151,14 @@ fun PreChequeoScreen(
         Campo(vm.observaciones, { vm.observaciones = it }, "Observaciones")
 
         Text(
-            text = "Evidencias",
+            text = "Evidencias y Archivos",
             style = MaterialTheme.typography.titleMedium
         )
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             OutlinedButton(
                 onClick = {
                     val uri = crearUriFoto(context)
@@ -133,11 +176,73 @@ fun PreChequeoScreen(
                     )
                 }
             ) {
-                Text("Seleccionar de galería")
+                Text("Galería")
+            }
+
+            OutlinedButton(
+                onClick = {
+                    selectorArchivos.launch("*/*")
+                }
+            ) {
+                Text("Adjuntar archivo")
             }
         }
 
-        Fotos(vm.fotos)
+        val (imagenes, archivos) = vm.fotos.partition { esImagen(context, it) }
+
+        if (imagenes.isNotEmpty()) {
+            Text(
+                text = "Fotos (${imagenes.size})",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Fotos(
+                fotos = imagenes,
+                onEliminar = { indice ->
+                    val fotoAEliminar = imagenes[indice]
+                    vm.fotos.remove(fotoAEliminar)
+                }
+            )
+        }
+
+        if (archivos.isNotEmpty()) {
+            Text(
+                text = "Archivos adjuntos (${archivos.size})",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                archivos.forEach { uriString ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.InsertDriveFile,
+                                contentDescription = "Archivo",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = nombreArchivo(context, uriString),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        IconButton(onClick = { vm.fotos.remove(uriString) }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Quitar archivo"
+                            )
+                        }
+                    }
+                }
+            }
+        }
 
         Text(
             text = "Salud del buzo (datos ficticios)",

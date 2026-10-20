@@ -2,16 +2,22 @@ package com.duoc.aquachileapp.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.duoc.aquachileapp.ui.components.EtiquetaResultado
 import com.duoc.aquachileapp.ui.components.EtiquetaSalud
@@ -24,7 +30,7 @@ fun DetalleScreen(
     id: Int,
     onVolver: () -> Unit
 ) {
-
+    val context = LocalContext.current
     val preChequeo = vm.buscar(id)
 
     Column(
@@ -69,11 +75,40 @@ fun DetalleScreen(
             }
 
             if (preChequeo.fotos.isNotEmpty()) {
-                Text(
-                    text = "Evidencias",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Fotos(preChequeo.fotos)
+                val (imagenes, archivos) = preChequeo.fotos.partition { esImagen(context, it) }
+
+                if (imagenes.isNotEmpty()) {
+                    Text(
+                        text = "Fotos (toca una imagen para ampliar)",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Fotos(imagenes)
+                }
+
+                if (archivos.isNotEmpty()) {
+                    Text(
+                        text = "Archivos adjuntos",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                    archivos.forEach { uriString ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.InsertDriveFile,
+                                contentDescription = "Archivo",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = nombreArchivo(context, uriString),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
             }
 
             Text(
