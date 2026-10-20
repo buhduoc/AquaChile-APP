@@ -1,6 +1,7 @@
 package com.duoc.aquachileapp.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -119,7 +120,15 @@ fun HomeScreen(
         }
 
         registros.take(3).forEach { preChequeo ->
-            TarjetaPreChequeo(preChequeo)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        navController.navigate("detalle/${preChequeo.id}")
+                    }
+            ) {
+                TarjetaPreChequeo(preChequeo)
+            }
         }
     }
 }

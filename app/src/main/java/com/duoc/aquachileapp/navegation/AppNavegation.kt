@@ -12,12 +12,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.*
+import androidx.navigation.navArgument
 import com.duoc.aquachileapp.model.AppSection
 import com.duoc.aquachileapp.ui.screens.*
 import com.duoc.aquachileapp.viewmodel.CuentasViewModel
 import com.duoc.aquachileapp.viewmodel.HistorialViewModel
 import com.duoc.aquachileapp.viewmodel.HomeViewModel
+import com.duoc.aquachileapp.viewmodel.NuevoViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,7 +28,8 @@ import kotlinx.coroutines.launch
 fun AppNavigation(
     vm: HomeViewModel = viewModel(),
     historial: HistorialViewModel = viewModel(),
-    cuentas: CuentasViewModel = viewModel()
+    cuentas: CuentasViewModel = viewModel(),
+    nuevo: NuevoViewModel = viewModel()
 ) {
 
     val navController = rememberNavController()
@@ -111,6 +115,7 @@ fun AppNavigation(
 
                                         AppSection.SESION -> {
                                             vm.cerrarSesion()
+                                            nuevo.limpiar()
                                             navController.navigate("login") {
                                                 popUpTo("home") {
                                                     inclusive = true
@@ -196,19 +201,19 @@ fun AppNavigation(
                             icon = {
                                 Icon(
                                     Icons.Default.List,
-                                    contentDescription = "Checklist",
+                                    contentDescription = "Pre-chequeo",
                                     modifier = Modifier.size(20.dp)
                                 )
                             },
 
                             label = {
-                                Text("Checklist")
+                                Text("Pre-chequeo")
                             },
 
-                            selected = rutaActual == "checklist" || rutaActual == "prechequeo",
+                            selected = rutaActual == "historial" || rutaActual?.startsWith("detalle") == true,
 
                             onClick = {
-                                navController.navigate("prechequeo") {
+                                navController.navigate("historial") {
                                     launchSingleTop = true
                                     popUpTo("home") {
                                         saveState = true
@@ -269,21 +274,11 @@ fun AppNavigation(
 
                 composable("prechequeo") {
                     PreChequeoScreen(
-                        vm = historial,
-                        nombreSupervisor = vm.usuario?.nombre ?: "Sin supervisor",
-                        onContinuar = {
-                            navController.navigate("checklist")
-                        }
-                    )
-                }
-
-                composable("checklist") {
-                    ChecklistScreen(
-                        onGuardar = { items ->
-                            historial.guardar(
-                                items = items,
-                                supervisor = vm.usuario?.nombre ?: "Sin supervisor"
-                            )
+                        vm = nuevo,
+                        usuario = vm.usuario,
+                        onGuardar = { preChequeo ->
+                            historial.agregar(preChequeo)
+                            nuevo.limpiar()
                             navController.navigate("historial") {
                                 popUpTo("home")
                             }
@@ -293,7 +288,23 @@ fun AppNavigation(
 
                 composable("historial") {
                     HistorialScreen(
-                        vm = historial
+                        vm = historial,
+                        onDetalle = { id ->
+                            navController.navigate("detalle/$id")
+                        }
+                    )
+                }
+
+                composable(
+                    route = "detalle/{id}",
+                    arguments = listOf(navArgument("id") { type = NavType.IntType })
+                ) { entrada ->
+                    DetalleScreen(
+                        vm = historial,
+                        id = entrada.arguments?.getInt("id") ?: 0,
+                        onVolver = {
+                            navController.popBackStack()
+                        }
                     )
                 }
 
