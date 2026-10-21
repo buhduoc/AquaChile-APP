@@ -3,7 +3,7 @@ package com.duoc.aquachileapp.navegation
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
-
+import com.duoc.aquachileapp.ui.screens.PerfilScreen
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -337,7 +337,10 @@ fun AppNavigation(
                 }
 
                 composable("perfil"){
-                    Text("Pantalla de perfil")
+                    PerfilScreen(
+                        usuario = vm.usuario
+                    )
+
                 }
 
                 composable("registro") {
