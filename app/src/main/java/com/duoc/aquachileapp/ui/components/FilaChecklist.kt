@@ -28,6 +28,7 @@ fun FilaChecklist(
         ) {
             Estado.entries.filter { it != Estado.PENDIENTE }.forEach { estado ->
                 FilterChip(
+                    colors = colorChip(),
                     selected = item.estado == estado,
                     onClick = { alElegir(estado) },
                     label = { Text(estado.texto) }

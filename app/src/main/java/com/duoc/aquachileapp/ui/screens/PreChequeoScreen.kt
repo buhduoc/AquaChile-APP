@@ -6,7 +6,13 @@ import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import com.duoc.aquachileapp.ui.components.FondoBarra
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -117,176 +123,198 @@ fun PreChequeoScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(FondoBarra)
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
 
-        Text(
-            text = "Nuevo pre-chequeo",
-            style = MaterialTheme.typography.titleLarge
-        )
-
-        Text(
-            text = "Datos de la faena",
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        Campo(vm.centro, { vm.centro = it }, "Centro de operación")
-        Campo(vm.buzo, { vm.buzo = it }, "Buzo")
-        Campo(vm.supervisor, { vm.supervisor = it }, "Supervisor")
-
-        Text(
-            text = "Checklist de seguridad",
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        vm.items.forEachIndexed { indice, item ->
-            FilaChecklist(
-                item = item,
-                alElegir = { estado -> vm.cambiarEstado(indice, estado) }
-            )
-        }
-
-        Campo(vm.observaciones, { vm.observaciones = it }, "Observaciones")
-
-        Text(
-            text = "Evidencias y Archivos",
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        Row(
-            modifier = Modifier.horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 22.dp, end = 22.dp, top = 8.dp, bottom = 36.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            OutlinedButton(
-                onClick = {
-                    val uri = crearUriFoto(context)
-                    uriFotoTomada = uri
-                    camaraLauncher.launch(uri)
-                }
-            ) {
-                Text("Tomar foto")
-            }
+            Text(
+                text = "Nuevo pre-chequeo",
+                color = Color.White,
+                style = MaterialTheme.typography.titleLarge
+            )
 
-            OutlinedButton(
-                onClick = {
-                    selectorFotos.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                    )
-                }
-            ) {
-                Text("Galería")
-            }
+            Text(
+                text = "Datos de la faena",
+                color = Color.White.copy(alpha = 0.8f),
+                style = MaterialTheme.typography.titleMedium
+            )
 
-            OutlinedButton(
-                onClick = {
-                    selectorArchivos.launch("*/*")
-                }
-            ) {
-                Text("Adjuntar archivo")
-            }
+            Campo(vm.centro, { vm.centro = it }, "Centro de operación", sobreMorado = true)
+            Campo(vm.buzo, { vm.buzo = it }, "Buzo", sobreMorado = true)
+            Campo(vm.supervisor, { vm.supervisor = it }, "Supervisor", sobreMorado = true)
         }
 
-        val (imagenes, archivos) = vm.fotos.partition { esImagen(context, it) }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 600.dp)
+                .background(
+                    Color.White,
+                    RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+                )
+                .padding(22.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
 
-        if (imagenes.isNotEmpty()) {
             Text(
-                text = "Fotos (${imagenes.size})",
-                style = MaterialTheme.typography.bodyMedium
+                text = "Checklist de seguridad",
+                style = MaterialTheme.typography.titleMedium
             )
-            Fotos(
-                fotos = imagenes,
-                onEliminar = { indice ->
-                    val fotoAEliminar = imagenes[indice]
-                    vm.fotos.remove(fotoAEliminar)
+
+            vm.items.forEachIndexed { indice, item ->
+                FilaChecklist(
+                    item = item,
+                    alElegir = { estado -> vm.cambiarEstado(indice, estado) }
+                )
+            }
+
+            Campo(vm.observaciones, { vm.observaciones = it }, "Observaciones")
+
+            Text(
+                text = "Evidencias y Archivos",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        val uri = crearUriFoto(context)
+                        uriFotoTomada = uri
+                        camaraLauncher.launch(uri)
+                    }
+                ) {
+                    Text("Tomar foto")
                 }
-            )
-        }
 
-        if (archivos.isNotEmpty()) {
-            Text(
-                text = "Archivos adjuntos (${archivos.size})",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                archivos.forEach { uriString ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 2.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
+                OutlinedButton(
+                    onClick = {
+                        selectorFotos.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    }
+                ) {
+                    Text("Galería")
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        selectorArchivos.launch("*/*")
+                    }
+                ) {
+                    Text("Adjuntar archivo")
+                }
+            }
+
+            val (imagenes, archivos) = vm.fotos.partition { esImagen(context, it) }
+
+            if (imagenes.isNotEmpty()) {
+                Text(
+                    text = "Fotos (${imagenes.size})",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Fotos(
+                    fotos = imagenes,
+                    onEliminar = { indice ->
+                        val fotoAEliminar = imagenes[indice]
+                        vm.fotos.remove(fotoAEliminar)
+                    }
+                )
+            }
+
+            if (archivos.isNotEmpty()) {
+                Text(
+                    text = "Archivos adjuntos (${archivos.size})",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    archivos.forEach { uriString ->
                         Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 2.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.weight(1f)
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.InsertDriveFile,
-                                contentDescription = "Archivo",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = nombreArchivo(context, uriString),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                        IconButton(onClick = { vm.fotos.remove(uriString) }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Quitar archivo"
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.InsertDriveFile,
+                                    contentDescription = "Archivo",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = nombreArchivo(context, uriString),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                            IconButton(onClick = { vm.fotos.remove(uriString) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Quitar archivo"
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
 
-        Text(
-            text = "Salud del buzo (datos ficticios)",
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Campo(vm.sistolica, { vm.sistolica = it }, "Sistólica", Modifier.weight(1f), numero = true)
-            Campo(vm.diastolica, { vm.diastolica = it }, "Diastólica", Modifier.weight(1f), numero = true)
-        }
-
-        Campo(vm.saturacion, { vm.saturacion = it }, "Saturación O₂ (%)", numero = true)
-
-        PREGUNTAS_SALUD.forEach { pregunta ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(
-                    checked = pregunta in vm.alertas,
-                    onCheckedChange = { vm.marcarAlerta(pregunta) }
-                )
-                Text(pregunta)
-            }
-        }
-
-        vm.salud?.let { nivel ->
-            EtiquetaSalud(nivel)
-        }
-
-        vm.error?.let { mensaje ->
             Text(
-                text = mensaje,
-                color = MaterialTheme.colorScheme.error
+                text = "Salud del buzo (datos ficticios)",
+                style = MaterialTheme.typography.titleMedium
             )
-        }
 
-        Button(
-            onClick = {
-                val preChequeo = vm.crear()
-                if (preChequeo != null) {
-                    onGuardar(preChequeo)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Campo(vm.sistolica, { vm.sistolica = it }, "Sistólica", Modifier.weight(1f), numero = true)
+                Campo(vm.diastolica, { vm.diastolica = it }, "Diastólica", Modifier.weight(1f), numero = true)
+            }
+
+            Campo(vm.saturacion, { vm.saturacion = it }, "Saturación O₂ (%)", numero = true)
+
+            PREGUNTAS_SALUD.forEach { pregunta ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = pregunta in vm.alertas,
+                        onCheckedChange = { vm.marcarAlerta(pregunta) }
+                    )
+                    Text(pregunta)
                 }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Guardar pre-chequeo")
+            }
+
+            vm.salud?.let { nivel ->
+                EtiquetaSalud(nivel)
+            }
+
+            vm.error?.let { mensaje ->
+                Text(
+                    text = mensaje,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+            Button(
+                onClick = {
+                    val preChequeo = vm.crear()
+                    if (preChequeo != null) {
+                        onGuardar(preChequeo)
+                    }
+                },
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.fillMaxWidth().height(52.dp)
+            ) {
+                Text("Guardar pre-chequeo")
+            }
         }
     }
 }

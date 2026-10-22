@@ -11,6 +11,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
+import com.duoc.aquachileapp.ui.components.FondoBarra
+import com.duoc.aquachileapp.ui.components.colorItemDrawer
+import com.duoc.aquachileapp.ui.components.iconoDe
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import com.duoc.aquachileapp.ui.components.colorItemNav
+import com.duoc.aquachileapp.ui.theme.Morado
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
@@ -52,21 +63,41 @@ fun AppNavigation(
         drawerContent = {
 
             if (mostrarMenu) {
-                ModalDrawerSheet {
+                ModalDrawerSheet(
+                    drawerContainerColor = Color.White,
+                    windowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp)
+                ) {
 
-                    Text(
-                        text = "AquaCheck Buceo",
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.titleLarge
-                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(FondoBarra)
+                            .statusBarsPadding()
+                            .padding(horizontal = 20.dp, vertical = 24.dp)
+                    ) {
+                        Text(
+                            text = "AquaCheck Buceo",
+                            color = Color.White,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = vm.usuario?.nombre ?: "",
+                            color = Color.White.copy(alpha = 0.8f),
+                            fontSize = 13.sp
+                        )
+                    }
 
-                    HorizontalDivider()
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     AppSection.entries.filter {
                         it != AppSection.APROBACIONES || vm.usuario?.esSupervisor == true
                     }.forEach { item ->
 
                         NavigationDrawerItem(
+                            icon = { Icon(iconoDe(item), contentDescription = null) },
+                            colors = colorItemDrawer(),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
                             label = {
                                 Text(item.seccion)
                             },
@@ -140,6 +171,13 @@ fun AppNavigation(
                 if (mostrarMenu) {
 
                     TopAppBar(
+                        modifier = Modifier.background(FondoBarra),
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                            scrolledContainerColor = Color.Transparent,
+                            titleContentColor = Color.White,
+                            navigationIconContentColor = Color.White
+                        ),
                         title = {
                             Text("AquaCheck Buceo")
                         },
@@ -168,9 +206,17 @@ fun AppNavigation(
 
                 if (mostrarMenu) {
 
-                    NavigationBar {
+                    NavigationBar(
+                        containerColor = Color.White,
+                        tonalElevation = 0.dp,
+                        modifier = Modifier.shadow(
+                            elevation = 16.dp,
+                            shape = RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)
+                        )
+                    ) {
 
                         NavigationBarItem(
+                            colors = colorItemNav(),
 
                             icon = {
                                 Icon(
@@ -197,6 +243,7 @@ fun AppNavigation(
                         )
 
                         NavigationBarItem(
+                            colors = colorItemNav(),
 
                             icon = {
                                 Icon(
@@ -224,6 +271,7 @@ fun AppNavigation(
                         )
 
                         NavigationBarItem(
+                            colors = colorItemNav(),
 
                             icon = {
                                 Icon(
@@ -333,7 +381,12 @@ fun AppNavigation(
                 }
 
                 composable("resumen") {
-                    Text("Pantalla de resumen")
+                    ResumenScreen(
+                        historial = historial,
+                        onDetalle = { id ->
+                            navController.navigate("detalle/$id")
+                        }
+                    )
                 }
 
                 composable("perfil"){

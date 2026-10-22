@@ -2,6 +2,7 @@ package com.duoc.aquachileapp.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -88,7 +89,8 @@ fun LoginScreen(
                 containerColor = Color.White,
                 contentColor = AzulLogin
             ),
-            modifier = Modifier.fillMaxWidth()
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth().height(50.dp)
         ) {
             Text("Ingresar")
         }

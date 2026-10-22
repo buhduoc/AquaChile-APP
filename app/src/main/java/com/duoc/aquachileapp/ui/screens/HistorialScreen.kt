@@ -3,6 +3,11 @@ package com.duoc.aquachileapp.ui.screens
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import com.duoc.aquachileapp.ui.components.colorChip
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,10 +51,10 @@ fun HistorialScreen(
     val filtrados = vm.registros.filter { registro ->
         val coincideResultado = filtro == null || registro.resultado == filtro
         val coincideTexto = texto.isEmpty() ||
-            registro.centro.contains(texto, ignoreCase = true) ||
-            registro.buzo.contains(texto, ignoreCase = true) ||
-            registro.supervisor.contains(texto, ignoreCase = true) ||
-            registro.fecha.contains(texto)
+                registro.centro.contains(texto, ignoreCase = true) ||
+                registro.buzo.contains(texto, ignoreCase = true) ||
+                registro.supervisor.contains(texto, ignoreCase = true) ||
+                registro.fecha.contains(texto)
         coincideResultado && coincideTexto
     }
 
@@ -62,6 +67,7 @@ fun HistorialScreen(
         Text(
             text = "Historial de pre-chequeos",
             style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
@@ -78,6 +84,12 @@ fun HistorialScreen(
                 }
             },
             singleLine = true,
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                unfocusedBorderColor = Color.Transparent
+            ),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -88,12 +100,14 @@ fun HistorialScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             FilterChip(
+                colors = colorChip(),
                 selected = filtro == null,
                 onClick = { filtro = null },
                 label = { Text("Todos") }
             )
             Resultado.entries.forEach { resultado ->
                 FilterChip(
+                    colors = colorChip(),
                     selected = filtro == resultado,
                     onClick = { filtro = if (filtro == resultado) null else resultado },
                     label = { Text(resultado.texto) }
