@@ -90,8 +90,12 @@ fun AppNavigation(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    AppSection.entries.filter {
-                        it != AppSection.APROBACIONES || vm.usuario?.esSupervisor == true
+                    AppSection.entries.filter { item ->
+                        if (item == AppSection.APROBACIONES) {
+                            vm.usuario?.esSupervisor == true
+                        } else {
+                            true
+                        }
                     }.forEach { item ->
 
                         NavigationDrawerItem(
@@ -366,6 +370,7 @@ fun AppNavigation(
                     DetalleScreen(
                         vm = historial,
                         id = entrada.arguments?.getInt("id") ?: 0,
+                        esSupervisor = vm.usuario?.esSupervisor == true,
                         onVolver = {
                             navController.popBackStack()
                         }
@@ -374,9 +379,12 @@ fun AppNavigation(
 
                 composable("aprobaciones") {
                     if (vm.usuario?.esSupervisor == true) {
-                        AprobacionesScreen(cuentas = cuentas)
+                        AprobacionesScreen(
+                            cuentas = cuentas,
+                            historial = historial
+                        )
                     } else {
-                        Text("Solo el supervisor puede aprobar cuentas")
+                        Text("Solo el supervisor tiene permisos para acceder a esta sección de gestión.")
                     }
                 }
 

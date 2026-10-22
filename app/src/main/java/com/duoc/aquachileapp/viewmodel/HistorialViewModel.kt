@@ -48,6 +48,14 @@ class HistorialViewModel : ViewModel() {
         return registros.firstOrNull { it.id == id }
     }
 
+    fun eliminar(id: Int) {
+        registros.removeAll { it.id == id }
+    }
+
+    fun eliminar(preChequeo: PreChequeo) {
+        registros.remove(preChequeo)
+    }
+
     private fun ejemplo(
         id: Int,
         centro: String,

@@ -8,7 +8,8 @@ class CuentasViewModel : ViewModel() {
 
     val cuentas = mutableStateListOf(
         Cuenta("supervisor@aquachile.cl", "supervisor123", "Supervisor Demo", "Supervisor", true),
-        Cuenta("12345678-9", "buzo123", "Buzo Demo", "Buzo", true)
+        Cuenta("12345678-9", "buzo123", "Buzo Demo", "Buzo", true),
+        Cuenta("98765432-1", "buzo123", "Juan Pérez (Solicitud Pendiente)", "Buzo", false)
     )
 
     val pendientes: List<Cuenta>
@@ -40,6 +41,10 @@ class CuentasViewModel : ViewModel() {
         }
     }
 
+    fun eliminar(cuenta: Cuenta) {
+        cuentas.remove(cuenta)
+    }
+
     fun buscar(usuario: String, clave: String): Cuenta? {
         val id = limpiar(usuario)
         return cuentas.firstOrNull {
@@ -47,8 +52,8 @@ class CuentasViewModel : ViewModel() {
         }
     }
 
-private fun limpiar(usuario: String): String {
-    val texto = usuario.trim()
-    return if (texto.contains("@")) texto else texto.replace(".", "")
-}
+    private fun limpiar(usuario: String): String {
+        val texto = usuario.trim()
+        return if (texto.contains("@")) texto else texto.replace(".", "")
+    }
 }
