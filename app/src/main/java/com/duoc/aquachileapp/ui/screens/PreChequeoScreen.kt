@@ -8,18 +8,16 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.graphics.Color
-import com.duoc.aquachileapp.ui.components.FondoBarra
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
@@ -28,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -39,15 +38,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import com.duoc.aquachileapp.model.Estado
 import com.duoc.aquachileapp.model.PREGUNTAS_SALUD
 import com.duoc.aquachileapp.model.PreChequeo
 import com.duoc.aquachileapp.model.Usuario
 import com.duoc.aquachileapp.ui.components.Campo
 import com.duoc.aquachileapp.ui.components.EtiquetaSalud
 import com.duoc.aquachileapp.ui.components.FilaChecklist
+import com.duoc.aquachileapp.ui.components.FondoBarra
 import com.duoc.aquachileapp.ui.components.Fotos
 import com.duoc.aquachileapp.viewmodel.NuevoViewModel
 import java.io.File
@@ -88,6 +92,7 @@ fun PreChequeoScreen(
 ) {
     val context = LocalContext.current
     var uriFotoTomada by rememberSaveable { mutableStateOf<Uri?>(null) }
+    var itemParaFotoIndex by rememberSaveable { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(Unit) {
         vm.prepararDatos(usuario)
@@ -98,7 +103,12 @@ fun PreChequeoScreen(
     ) { exito ->
         if (exito) {
             uriFotoTomada?.let { uri ->
-                vm.fotos.add(uri.toString())
+                val str = uri.toString()
+                if (itemParaFotoIndex != null) {
+                    vm.agregarFotoItem(itemParaFotoIndex!!, str)
+                } else {
+                    if (str !in vm.fotos) vm.fotos.add(str)
+                }
             }
         }
     }
@@ -106,7 +116,14 @@ fun PreChequeoScreen(
     val selectorFotos = rememberLauncherForActivityResult(
         ActivityResultContracts.PickMultipleVisualMedia()
     ) { uris ->
-        vm.fotos.addAll(uris.map { it.toString() })
+        uris.forEach { uri ->
+            val str = uri.toString()
+            if (itemParaFotoIndex != null) {
+                vm.agregarFotoItem(itemParaFotoIndex!!, str)
+            } else {
+                if (str !in vm.fotos) vm.fotos.add(str)
+            }
+        }
     }
 
     val selectorArchivos = rememberLauncherForActivityResult(
@@ -170,14 +187,52 @@ fun PreChequeoScreen(
             vm.items.forEachIndexed { indice, item ->
                 FilaChecklist(
                     item = item,
-                    alElegir = { estado -> vm.cambiarEstado(indice, estado) }
+                    alElegir = { estado -> vm.cambiarEstado(indice, estado) },
+                    alCambiarObservacion = { obs -> vm.cambiarObservacion(indice, obs) },
+                    onTomarFoto = {
+                        itemParaFotoIndex = indice
+                        val uri = crearUriFoto(context)
+                        uriFotoTomada = uri
+                        camaraLauncher.launch(uri)
+                    },
+                    onGaleria = {
+                        itemParaFotoIndex = indice
+                        selectorFotos.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    onEliminarFoto = { indiceFoto ->
+                        vm.eliminarFotoItem(indice, indiceFoto)
+                    }
                 )
             }
 
-            Campo(vm.observaciones, { vm.observaciones = it }, "Observaciones")
+            val evaluados = vm.items.count { it.estado != Estado.PENDIENTE }
+            val totalItems = vm.items.size
+            if (totalItems > 0) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "$evaluados de $totalItems ítems evaluados",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF374151)
+                    )
+                    LinearProgressIndicator(
+                        progress = { evaluados.toFloat() / totalItems.toFloat() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                        color = Color(0xFF0F4C81),
+                        trackColor = Color(0xFFE5E7EB)
+                    )
+                }
+            }
+
+            Campo(vm.observaciones, { vm.observaciones = it }, "Observaciones generales")
 
             Text(
-                text = "Evidencias y Archivos",
+                text = "Evidencias generales y Archivos",
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -187,6 +242,7 @@ fun PreChequeoScreen(
             ) {
                 OutlinedButton(
                     onClick = {
+                        itemParaFotoIndex = null
                         val uri = crearUriFoto(context)
                         uriFotoTomada = uri
                         camaraLauncher.launch(uri)
@@ -197,6 +253,7 @@ fun PreChequeoScreen(
 
                 OutlinedButton(
                     onClick = {
+                        itemParaFotoIndex = null
                         selectorFotos.launch(
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                         )
@@ -207,6 +264,7 @@ fun PreChequeoScreen(
 
                 OutlinedButton(
                     onClick = {
+                        itemParaFotoIndex = null
                         selectorArchivos.launch("*/*")
                     }
                 ) {
@@ -218,7 +276,7 @@ fun PreChequeoScreen(
 
             if (imagenes.isNotEmpty()) {
                 Text(
-                    text = "Fotos (${imagenes.size})",
+                    text = "Fotos generales (${imagenes.size})",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Fotos(
@@ -311,7 +369,9 @@ fun PreChequeoScreen(
                     }
                 },
                 shape = RoundedCornerShape(24.dp),
-                modifier = Modifier.fillMaxWidth().height(52.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
             ) {
                 Text("Guardar pre-chequeo")
             }

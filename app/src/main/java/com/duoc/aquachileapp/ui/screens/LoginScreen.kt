@@ -1,20 +1,24 @@
 package com.duoc.aquachileapp.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.duoc.aquachileapp.R
 import com.duoc.aquachileapp.model.Usuario
 import com.duoc.aquachileapp.ui.components.AzulLogin
 import com.duoc.aquachileapp.ui.components.FondoLogin
-import com.duoc.aquachileapp.ui.components.RosaError
-import com.duoc.aquachileapp.ui.components.coloresCampoLogin
 import com.duoc.aquachileapp.viewmodel.CuentasViewModel
 import com.duoc.aquachileapp.viewmodel.LoginViewModel
 
@@ -26,80 +30,109 @@ fun LoginScreen(
     vm: LoginViewModel = viewModel()
 ) {
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(FondoLogin)
-            .padding(32.dp),
-        verticalArrangement = Arrangement.Center
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
     ) {
 
-        Text(
-            text = "AquaChile APP",
-            color = Color.White,
-            style = MaterialTheme.typography.headlineMedium
-        )
-
-        Text(
-            text = "Iniciar sesión",
-            color = Color.White
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        TextField(
-            value = vm.usuario,
-            onValueChange = { vm.onUsuarioChange(it) },
-            label = { Text("RUT o correo corporativo") },
-            singleLine = true,
-            colors = coloresCampoLogin(),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        TextField(
-            value = vm.contrasena,
-            onValueChange = { vm.onContrasenaChange(it) },
-            label = { Text("Contraseña") },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            colors = coloresCampoLogin(),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        if (vm.error != null) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = vm.error!!,
-                color = RosaError
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = {
-                val usuario = vm.iniciarSesion(cuentas)
-                if (usuario != null) {
-                    onLoginExitoso(usuario)
-                }
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.White,
-                contentColor = AzulLogin
-            ),
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color.White),
             shape = RoundedCornerShape(24.dp),
-            modifier = Modifier.fillMaxWidth().height(50.dp)
-        ) {
-            Text("Ingresar")
-        }
-
-        TextButton(
-            onClick = onCrearCuenta,
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Crear cuenta", color = Color.White)
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+
+                Image(
+                    painter = painterResource(id = R.drawable.aquachile_logo),
+                    contentDescription = "Logo AquaChile",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .height(95.dp)
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp)
+                )
+
+                Text(
+                    text = "AquaChile APP",
+                    color = AzulLogin,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = "Iniciar sesión",
+                    color = Color(0xFF6B7280),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                OutlinedTextField(
+                    value = vm.usuario,
+                    onValueChange = { vm.onUsuarioChange(it) },
+                    label = { Text("RUT o correo corporativo") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = vm.contrasena,
+                    onValueChange = { vm.onContrasenaChange(it) },
+                    label = { Text("Contraseña") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                if (vm.error != null) {
+                    Text(
+                        text = vm.error!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Button(
+                    onClick = {
+                        val usuario = vm.iniciarSesion(cuentas)
+                        if (usuario != null) {
+                            onLoginExitoso(usuario)
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AzulLogin,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                ) {
+                    Text("Ingresar", fontWeight = FontWeight.Bold)
+                }
+
+                TextButton(
+                    onClick = onCrearCuenta,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Crear cuenta", color = AzulLogin, fontWeight = FontWeight.SemiBold)
+                }
+            }
         }
     }
 }

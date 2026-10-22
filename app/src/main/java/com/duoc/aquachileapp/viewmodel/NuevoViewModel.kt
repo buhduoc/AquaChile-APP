@@ -58,6 +58,37 @@ class NuevoViewModel : ViewModel() {
         error = null
     }
 
+    fun cambiarObservacion(indice: Int, observacion: String) {
+        items[indice] = items[indice].copy(observacion = observacion)
+        error = null
+    }
+
+    fun agregarFotoItem(indice: Int, uri: String) {
+        if (indice in items.indices) {
+            val lista = items[indice].fotos.toMutableList()
+            if (uri !in lista) {
+                lista.add(uri)
+                items[indice] = items[indice].copy(fotos = lista)
+            }
+        }
+        if (uri !in fotos) {
+            fotos.add(uri)
+        }
+    }
+
+    fun eliminarFotoItem(indiceItem: Int, indiceFoto: Int) {
+        if (indiceItem in items.indices) {
+            val lista = items[indiceItem].fotos.toMutableList()
+            if (indiceFoto in lista.indices) {
+                val fotoEliminada = lista.removeAt(indiceFoto)
+                items[indiceItem] = items[indiceItem].copy(fotos = lista)
+                if (items.none { fotoEliminada in it.fotos }) {
+                    fotos.remove(fotoEliminada)
+                }
+            }
+        }
+    }
+
     fun marcarAlerta(pregunta: String) {
         if (pregunta in alertas) {
             alertas.remove(pregunta)
