@@ -25,6 +25,9 @@ fun RegistroScreen(
     var nombre by remember { mutableStateOf("") }
     var usuario by remember { mutableStateOf("") }
     var clave by remember { mutableStateOf("") }
+    var rut by remember { mutableStateOf("") }
+    var telefono by remember { mutableStateOf("") }
+    var correo by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     var enviado by remember { mutableStateOf(false) }
 
@@ -128,7 +131,7 @@ fun RegistroScreen(
 
             Button(
                 onClick = {
-                    val resultado = cuentas.registrar(usuario, clave, nombre)
+                    val resultado = cuentas.registrar(usuario, clave, nombre,rut,telefono,correo)
                     if (resultado == null) {
                         enviado = true
                     } else {

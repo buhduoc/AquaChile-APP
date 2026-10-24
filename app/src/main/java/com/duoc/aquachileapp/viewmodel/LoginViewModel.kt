@@ -54,6 +54,7 @@ class LoginViewModel : ViewModel() {
         }
 
         error = null
-        return Usuario(nombre = cuenta.nombre, rol = cuenta.rol)
+        return Usuario(nombre = cuenta.nombre, rol = cuenta.rol, rut = cuenta.rut, telefono = cuenta.telefono,
+            correo = cuenta.correo)
     }
 }
