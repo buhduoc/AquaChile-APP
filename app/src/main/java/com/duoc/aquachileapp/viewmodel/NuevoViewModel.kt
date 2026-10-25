@@ -44,6 +44,7 @@ class NuevoViewModel : ViewModel() {
         }
 
     fun prepararDatos(usuario: Usuario?) {
+        if (centro.isBlank()) centro = "Centro Puerto Montt"
         if (usuario == null) return
 
         if (usuario.esSupervisor) {
@@ -142,7 +143,7 @@ class NuevoViewModel : ViewModel() {
     }
 
     fun limpiar() {
-        centro = ""
+        centro = "Centro Puerto Montt"
         buzo = ""
         supervisor = ""
         items.clear()

@@ -49,6 +49,7 @@ import com.duoc.aquachileapp.model.PREGUNTAS_SALUD
 import com.duoc.aquachileapp.model.PreChequeo
 import com.duoc.aquachileapp.model.Usuario
 import com.duoc.aquachileapp.ui.components.Campo
+import com.duoc.aquachileapp.ui.components.CampoDesplegableCentro
 import com.duoc.aquachileapp.ui.components.EtiquetaSalud
 import com.duoc.aquachileapp.ui.components.FilaChecklist
 import com.duoc.aquachileapp.ui.components.FondoBarra
@@ -162,7 +163,11 @@ fun PreChequeoScreen(
                 style = MaterialTheme.typography.titleMedium
             )
 
-            Campo(vm.centro, { vm.centro = it }, "Centro de operación", sobreMorado = true)
+            CampoDesplegableCentro(
+                valor = vm.centro,
+                alSeleccionar = { vm.centro = it },
+                sobreMorado = true
+            )
             Campo(vm.buzo, { vm.buzo = it }, "Buzo", sobreMorado = true)
             Campo(vm.supervisor, { vm.supervisor = it }, "Supervisor", sobreMorado = true)
         }
