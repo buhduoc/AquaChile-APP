@@ -3,6 +3,12 @@ package com.duoc.aquachileapp.navegation
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.foundation.Image
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import com.duoc.aquachileapp.R
 import com.duoc.aquachileapp.ui.screens.PerfilScreen
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -183,9 +189,13 @@ fun AppNavigation(
                             navigationIconContentColor = Color.White
                         ),
                         title = {
-                            Text("AquaCheck Buceo")
+                            Text(
+                                text = "Hola, ${vm.usuario?.nombre ?: "Usuario"}",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         },
-
                         navigationIcon = {
 
                             IconButton(

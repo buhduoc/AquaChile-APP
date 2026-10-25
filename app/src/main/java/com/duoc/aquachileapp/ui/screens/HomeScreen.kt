@@ -1,5 +1,6 @@
 package com.duoc.aquachileapp.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -8,24 +9,32 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.duoc.aquachileapp.model.Resultado
-import com.duoc.aquachileapp.ui.components.PastillaTab
 import com.duoc.aquachileapp.ui.components.TarjetaPreChequeo
 import com.duoc.aquachileapp.ui.theme.Morado
-import com.duoc.aquachileapp.ui.theme.TextoOscuro
 import com.duoc.aquachileapp.ui.theme.TextoSuave
 import com.duoc.aquachileapp.viewmodel.CuentasViewModel
 import com.duoc.aquachileapp.viewmodel.HistorialViewModel
+
+data class InfoClima(
+    val ciudad: String,
+    val temperatura: String,
+    val condicion: String,
+    val maxMin: String,
+    val gradientColors: List<Color>
+)
 
 @Composable
 fun HomeScreen(
@@ -39,36 +48,65 @@ fun HomeScreen(
     val registros = historial.registros
     val pendientes = cuentas.pendientes.size
 
+    var ciudadIndex by rememberSaveable { mutableStateOf(1) }
+    var mostrarDialogoClima by rememberSaveable { mutableStateOf(false) }
+
+    val ciudadesClima = listOf(
+        InfoClima("Centro Puerto Montt", "16°", "Parcialmente Nublado", "H: 18°  L: 11°", listOf(Color(0xFF4a6fa5), Color(0xFF16222a))),
+        InfoClima("Centro Osorno", "22°", "Soleado y Despejado", "H: 25°  L: 14°", listOf(Color(0xFF00c6ff), Color(0xFF0072ff))),
+        InfoClima("Centro Calbuco", "12°", "Lluvia Moderada", "H: 14°  L: 9°", listOf(Color(0xFF232526), Color(0xFF414345)))
+    )
+    val climaActual = ciudadesClima[ciudadIndex]
+
+    if (mostrarDialogoClima) {
+        AlertDialog(
+            onDismissRequest = { mostrarDialogoClima = false },
+            title = { Text("Seleccionar Centro") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ciudadesClima.forEachIndexed { index, info ->
+                        OutlinedButton(
+                            onClick = {
+                                ciudadIndex = index
+                                mostrarDialogoClima = false
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                text = info.ciudad,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { mostrarDialogoClima = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 18.dp, vertical = 8.dp),
+            .padding(horizontal = 18.dp, vertical = 12.dp),
 
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
-        Column {
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(SpanStyle(fontWeight = FontWeight.Normal)) { append("Hola, ") }
-                    withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append("$nombreUsuario!") }
-                },
-                fontSize = 22.sp,
-                color = TextoOscuro
-            )
-            Text(
-                text = "Sistema de pre-chequeo de seguridad para operaciones de buceo.",
-                fontSize = 12.sp,
-                color = TextoSuave
-            )
-        }
+        Spacer(modifier = Modifier.height(4.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            PastillaTab("Resumen", seleccionada = true, onClick = {})
-            PastillaTab("Historial", seleccionada = false) { navController.navigate("historial") }
-            PastillaTab("Nuevo", seleccionada = false) { navController.navigate("prechequeo") }
-        }
+        TarjetaClima(
+            info = climaActual,
+            onClick = {
+                mostrarDialogoClima = true
+            }
+        )
 
         if (esSupervisor && pendientes > 0) {
             Card(
@@ -97,7 +135,7 @@ fun HomeScreen(
             }
         }
 
-        // Tarjetas moradas con barra de progreso (como "Back End Development" de la imagen)
+        // Tarjetas moradas con barra de progreso
         Row(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(14.dp)
@@ -156,6 +194,71 @@ fun HomeScreen(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun TarjetaClima(
+    info: InfoClima,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(95.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(18.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Brush.linearGradient(info.gradientColors))
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = info.ciudad,
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = info.condicion,
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = "Toque para seleccionar clima",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 10.sp
+                    )
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = info.temperatura,
+                        color = Color.White,
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Light
+                    )
+                    Text(
+                        text = info.maxMin,
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontSize = 11.sp
+                    )
+                }
+            }
+        }
     }
 }
 

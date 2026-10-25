@@ -1,47 +1,73 @@
 package com.duoc.aquachileapp.viewmodel
 
+import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.duoc.aquachileapp.data.local.AppDatabase
+import com.duoc.aquachileapp.data.local.toDomain
+import com.duoc.aquachileapp.data.local.toEntity
 import com.duoc.aquachileapp.model.CHECKLIST
 import com.duoc.aquachileapp.model.Estado
 import com.duoc.aquachileapp.model.ItemChecklist
 import com.duoc.aquachileapp.model.PreChequeo
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-class HistorialViewModel : ViewModel() {
+class HistorialViewModel(application: Application) : AndroidViewModel(application) {
 
-    val registros = mutableStateListOf(
-        ejemplo(
-            id = 3,
-            centro = "Centro Calbuco",
-            fecha = "17-10-2026 07:45",
-            buzo = "Carlos Muñoz",
-            items = itemsDeEjemplo()
-        ),
-        ejemplo(
-            id = 2,
-            centro = "Centro Hornopirén",
-            fecha = "16-10-2026 14:10",
-            buzo = "Andrés Vera",
-            items = itemsDeEjemplo(observada = true),
-            observaciones = "Señalización con poca visibilidad"
-        ),
-        ejemplo(
-            id = 1,
-            centro = "Centro Quellón",
-            fecha = "15-10-2026 09:00",
-            buzo = "Luis Barría",
-            items = itemsDeEjemplo(fallaCritica = true),
-            observaciones = "Compresor sin presión"
-        )
-    )
+    private val dao = AppDatabase.obtenerInstancia(application).preChequeoDao()
+
+    val registros = mutableStateListOf<PreChequeo>()
+
+    init {
+        viewModelScope.launch {
+            val initial = dao.obtenerTodosSync()
+            if (initial.isEmpty()) {
+                val demo1 = ejemplo(
+                    id = 1,
+                    centro = "Centro Calbuco",
+                    fecha = "17-10-2026 07:45",
+                    buzo = "Carlos Muñoz",
+                    items = itemsDeEjemplo()
+                )
+                val demo2 = ejemplo(
+                    id = 2,
+                    centro = "Centro Osorno",
+                    fecha = "16-10-2026 14:10",
+                    buzo = "Andrés Vera",
+                    items = itemsDeEjemplo(observada = true),
+                    observaciones = "Señalización con poca visibilidad"
+                )
+                val demo3 = ejemplo(
+                    id = 3,
+                    centro = "Centro Puerto Montt",
+                    fecha = "15-10-2026 09:00",
+                    buzo = "Luis Barría",
+                    items = itemsDeEjemplo(fallaCritica = true),
+                    observaciones = "Compresor sin presión"
+                )
+                dao.insertar(demo1.toEntity())
+                dao.insertar(demo2.toEntity())
+                dao.insertar(demo3.toEntity())
+            }
+
+            dao.obtenerTodos().collectLatest { entities ->
+                registros.clear()
+                registros.addAll(entities.map { it.toDomain() })
+            }
+        }
+    }
 
     fun agregar(preChequeo: PreChequeo) {
-        registros.add(0, preChequeo.copy(id = registros.size + 1))
+        viewModelScope.launch {
+            dao.insertar(preChequeo.toEntity())
+        }
     }
 
     fun buscar(id: Int): PreChequeo? {
@@ -49,11 +75,15 @@ class HistorialViewModel : ViewModel() {
     }
 
     fun eliminar(id: Int) {
-        registros.removeAll { it.id == id }
+        viewModelScope.launch {
+            dao.eliminarPorId(id)
+        }
     }
 
     fun eliminar(preChequeo: PreChequeo) {
-        registros.remove(preChequeo)
+        viewModelScope.launch {
+            dao.eliminar(preChequeo.toEntity())
+        }
     }
 
     private fun ejemplo(
@@ -91,23 +121,24 @@ class HistorialViewModel : ViewModel() {
     ) {
         val fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))
 
-        registros.add(
-            0,
-            PreChequeo(
-                id = registros.size + 1,
-                centro = centro.ifBlank { "Sin centro" },
-                fecha = fecha,
-                buzo = buzo.ifBlank { "Sin buzo" },
-                supervisor = supervisor,
-                items = items,
-                observaciones = observaciones,
-                fotos = fotos,
-                sistolica = 120,
-                diastolica = 80,
-                saturacion = 98,
-                alertas = emptyList()
-            )
+        val nuevoPreChequeo = PreChequeo(
+            id = 0,
+            centro = centro.ifBlank { "Centro Puerto Montt" },
+            fecha = fecha,
+            buzo = buzo.ifBlank { "Sin buzo" },
+            supervisor = supervisor,
+            items = items,
+            observaciones = observaciones,
+            fotos = fotos,
+            sistolica = 120,
+            diastolica = 80,
+            saturacion = 98,
+            alertas = emptyList()
         )
+
+        viewModelScope.launch {
+            dao.insertar(nuevoPreChequeo.toEntity())
+        }
 
         centro = ""
         buzo = ""

@@ -53,6 +53,7 @@ import com.duoc.aquachileapp.ui.components.EtiquetaSalud
 import com.duoc.aquachileapp.ui.components.FilaChecklist
 import com.duoc.aquachileapp.ui.components.FondoBarra
 import com.duoc.aquachileapp.ui.components.Fotos
+import com.duoc.aquachileapp.ui.components.SelectorCentro
 import com.duoc.aquachileapp.viewmodel.NuevoViewModel
 import java.io.File
 
@@ -162,7 +163,13 @@ fun PreChequeoScreen(
                 style = MaterialTheme.typography.titleMedium
             )
 
-            Campo(vm.centro, { vm.centro = it }, "Centro de operación", sobreMorado = true)
+            SelectorCentro(
+                valor = vm.centro,
+                alCambiar = { vm.centro = it },
+                etiqueta = "Centro de operación",
+                opciones = listOf("Centro Puerto Montt", "Centro Osorno", "Centro Calbuco"),
+                sobreMorado = true
+            )
             Campo(vm.buzo, { vm.buzo = it }, "Buzo", sobreMorado = true)
             Campo(vm.supervisor, { vm.supervisor = it }, "Supervisor", sobreMorado = true)
         }

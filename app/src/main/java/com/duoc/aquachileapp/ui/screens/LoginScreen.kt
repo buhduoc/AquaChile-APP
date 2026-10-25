@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -53,22 +54,27 @@ fun LoginScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
 
-                Image(
-                    painter = painterResource(id = R.drawable.aquachile_logo),
-                    contentDescription = "Logo AquaChile",
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .height(95.dp)
-                        .fillMaxWidth()
-                        .padding(bottom = 4.dp)
-                )
-
-                Text(
-                    text = "AquaChile APP",
-                    color = AzulLogin,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.aquachile_logo),
+                        contentDescription = "Logo AquaChile",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "AquaChile APP",
+                        color = AzulLogin,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
                 Text(
                     text = "Iniciar sesión",
