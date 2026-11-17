@@ -97,9 +97,11 @@ fun Fotos(
 
 @Composable
 fun DialogoZoomImagen(
-    fotoUrl: String,
+    fotoModel: Any? = null,
+    fotoUrl: String? = null,
     onDismiss: () -> Unit
 ) {
+    val modelAUsar = fotoModel ?: fotoUrl ?: ""
     var scale by remember { mutableFloatStateOf(1f) }
     var offsetX by remember { mutableFloatStateOf(0f) }
     var offsetY by remember { mutableFloatStateOf(0f) }
@@ -127,7 +129,7 @@ fun DialogoZoomImagen(
             contentAlignment = Alignment.Center
         ) {
             AsyncImage(
-                model = fotoUrl,
+                model = modelAUsar,
                 contentDescription = "Imagen ampliada",
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
@@ -145,7 +147,7 @@ fun DialogoZoomImagen(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(16.dp)
-                    .background(Color.Black.copy(alpha = 0.5f), shape = CircleShape)
+                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
