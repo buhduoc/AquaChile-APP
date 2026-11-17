@@ -11,24 +11,33 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,17 +52,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import com.duoc.aquachileapp.model.Estado
 import com.duoc.aquachileapp.model.PREGUNTAS_SALUD
 import com.duoc.aquachileapp.model.PreChequeo
 import com.duoc.aquachileapp.model.Usuario
 import com.duoc.aquachileapp.ui.components.Campo
+import com.duoc.aquachileapp.ui.components.CampoDesplegableCentro
 import com.duoc.aquachileapp.ui.components.EtiquetaSalud
 import com.duoc.aquachileapp.ui.components.FilaChecklist
 import com.duoc.aquachileapp.ui.components.FondoBarra
 import com.duoc.aquachileapp.ui.components.Fotos
-import com.duoc.aquachileapp.ui.components.SelectorCentro
+import com.duoc.aquachileapp.ui.components.TarjetaEvidenciaEquipo
+import com.duoc.aquachileapp.ui.theme.Morado
 import com.duoc.aquachileapp.viewmodel.NuevoViewModel
 import java.io.File
 
@@ -94,6 +106,7 @@ fun PreChequeoScreen(
     val context = LocalContext.current
     var uriFotoTomada by rememberSaveable { mutableStateOf<Uri?>(null) }
     var itemParaFotoIndex by rememberSaveable { mutableStateOf<Int?>(null) }
+    var equipoTargetId by rememberSaveable { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         vm.prepararDatos(usuario)
@@ -105,7 +118,9 @@ fun PreChequeoScreen(
         if (exito) {
             uriFotoTomada?.let { uri ->
                 val str = uri.toString()
-                if (itemParaFotoIndex != null) {
+                if (equipoTargetId != null) {
+                    vm.adjuntarFotoEquipo(equipoTargetId!!, str)
+                } else if (itemParaFotoIndex != null) {
                     vm.agregarFotoItem(itemParaFotoIndex!!, str)
                 } else {
                     if (str !in vm.fotos) vm.fotos.add(str)
@@ -119,7 +134,9 @@ fun PreChequeoScreen(
     ) { uris ->
         uris.forEach { uri ->
             val str = uri.toString()
-            if (itemParaFotoIndex != null) {
+            if (equipoTargetId != null) {
+                vm.adjuntarFotoEquipo(equipoTargetId!!, str)
+            } else if (itemParaFotoIndex != null) {
                 vm.agregarFotoItem(itemParaFotoIndex!!, str)
             } else {
                 if (str !in vm.fotos) vm.fotos.add(str)
@@ -163,11 +180,9 @@ fun PreChequeoScreen(
                 style = MaterialTheme.typography.titleMedium
             )
 
-            SelectorCentro(
+            CampoDesplegableCentro(
                 valor = vm.centro,
-                alCambiar = { vm.centro = it },
-                etiqueta = "Centro de operación",
-                opciones = listOf("Centro Puerto Montt", "Centro Osorno", "Centro Calbuco"),
+                alSeleccionar = { vm.centro = it },
                 sobreMorado = true
             )
             Campo(vm.buzo, { vm.buzo = it }, "Buzo", sobreMorado = true)
@@ -186,6 +201,188 @@ fun PreChequeoScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
+            // ---- Acreditaciones de Perfil del Buzo ----
+            val valRes = vm.validacion
+
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB)),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Acreditaciones y Perfil de Buceo (${vm.buzo.ifBlank { "Buzo" }})",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1F2937)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("• Edad / IMC:", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4B5563))
+                        Text("${vm.edad} años | IMC ${valRes.imc} (${valRes.imcCategoria})", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color(0xFF111827))
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("• Examen Preocupacional:", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4B5563))
+                        Text(if (vm.examenPreocupacionalVigente) "Vigente" else "Vencido / No Presentado", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = if (vm.examenPreocupacionalVigente) Color(0xFF047857) else Color(0xFFDC2626))
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("• Test de Esfuerzo (>45 años):", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4B5563))
+                        Text(if (vm.testEsfuerzoVigente) "Vigente" else "Pendiente / Vencido", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = if (vm.testEsfuerzoVigente) Color(0xFF047857) else Color(0xFFDC2626))
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("• Escuela de Buceo Calbuco:", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4B5563))
+                        Text("${vm.puntajeEscuelaCalbuco} / 100 pts", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color(0xFF111827))
+                    }
+                }
+            }
+
+            // ---- Tarjeta Semáforo de Validación en vivo ----
+            Card(
+                colors = CardDefaults.cardColors(containerColor = valRes.semaforo.color.copy(alpha = 0.12f)),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Surface(
+                            color = valRes.semaforo.color,
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (valRes.estaBloqueado) Icons.Default.Lock else Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Semáforo: ${valRes.semaforo.titulo}",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = valRes.semaforo.color
+                            )
+                            Text(
+                                text = "Validación cruzada de Perfil de Buzo, Salud y Equipos",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF374151)
+                            )
+                        }
+                    }
+
+                    if (valRes.estaBloqueado) {
+                        Surface(
+                            color = Color(0xFFFEE2E2),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = "⛔ GUARDA Y CIERRE BLOQUEADOS POR SEGURIDAD",
+                                    color = Color(0xFFDC2626),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
+                                )
+                                valRes.motivosBloqueo.forEach { motivo ->
+                                    Text(
+                                        text = "• $motivo",
+                                        color = Color(0xFF991B1B),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (valRes.advertencias.isNotEmpty()) {
+                        Surface(
+                            color = Color(0xFFFEF3C7),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(10.dp),
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                valRes.advertencias.forEach { adv ->
+                                    Text(
+                                        text = "⚠️ $adv",
+                                        color = Color(0xFFB45309),
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ---- Evidencia Fotográfica Obligatoria y Línea Base (Antes del Zarpe) ----
+            Text(
+                text = "Evidencia Fotográfica Obligatoria (Antes del Zarpe)",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                text = "Captura de los 4 equipos de seguridad requeridos con metadatos (ID Faena, Equipo, Fecha/Hora, Responsable) y comparación con Línea Base.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF6B7280)
+            )
+
+            vm.evidenciasEquipos.forEach { evidencia ->
+                TarjetaEvidenciaEquipo(
+                    evidencia = evidencia,
+                    onTomarFoto = {
+                        equipoTargetId = evidencia.idEquipo
+                        itemParaFotoIndex = null
+                        val uri = crearUriFoto(context)
+                        uriFotoTomada = uri
+                        camaraLauncher.launch(uri)
+                    },
+                    onGaleria = {
+                        equipoTargetId = evidencia.idEquipo
+                        itemParaFotoIndex = null
+                        selectorFotos.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    onEliminar = {
+                        vm.eliminarFotoEquipo(evidencia.idEquipo)
+                    }
+                )
+            }
+
+            // ---- Checklist ----
             Text(
                 text = "Checklist de seguridad",
                 style = MaterialTheme.typography.titleMedium
@@ -197,12 +394,14 @@ fun PreChequeoScreen(
                     alElegir = { estado -> vm.cambiarEstado(indice, estado) },
                     alCambiarObservacion = { obs -> vm.cambiarObservacion(indice, obs) },
                     onTomarFoto = {
+                        equipoTargetId = null
                         itemParaFotoIndex = indice
                         val uri = crearUriFoto(context)
                         uriFotoTomada = uri
                         camaraLauncher.launch(uri)
                     },
                     onGaleria = {
+                        equipoTargetId = null
                         itemParaFotoIndex = indice
                         selectorFotos.launch(
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -249,6 +448,7 @@ fun PreChequeoScreen(
             ) {
                 OutlinedButton(
                     onClick = {
+                        equipoTargetId = null
                         itemParaFotoIndex = null
                         val uri = crearUriFoto(context)
                         uriFotoTomada = uri
@@ -260,6 +460,7 @@ fun PreChequeoScreen(
 
                 OutlinedButton(
                     onClick = {
+                        equipoTargetId = null
                         itemParaFotoIndex = null
                         selectorFotos.launch(
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -271,6 +472,7 @@ fun PreChequeoScreen(
 
                 OutlinedButton(
                     onClick = {
+                        equipoTargetId = null
                         itemParaFotoIndex = null
                         selectorArchivos.launch("*/*")
                     }
@@ -375,12 +577,29 @@ fun PreChequeoScreen(
                         onGuardar(preChequeo)
                     }
                 },
+                enabled = !valRes.estaBloqueado,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (valRes.estaBloqueado) Color(0xFFDC2626) else Morado,
+                    disabledContainerColor = Color(0xFFFCA5A5),
+                    disabledContentColor = Color.White
+                ),
                 shape = RoundedCornerShape(24.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
             ) {
-                Text("Guardar pre-chequeo")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    if (valRes.estaBloqueado) {
+                        Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Guardado Bloqueado por Seguridad", fontWeight = FontWeight.Bold)
+                    } else {
+                        Text("Guardar pre-chequeo", fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         }
     }

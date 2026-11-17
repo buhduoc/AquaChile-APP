@@ -2,26 +2,27 @@ package com.duoc.aquachileapp.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationDrawerItemDefaults
-import androidx.compose.ui.graphics.vector.ImageVector
-import com.duoc.aquachileapp.model.AppSection
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.duoc.aquachileapp.model.AppSection
 import com.duoc.aquachileapp.ui.theme.ChipClaro
 import com.duoc.aquachileapp.ui.theme.Morado
 import com.duoc.aquachileapp.ui.theme.TextoOscuro
@@ -71,6 +72,7 @@ fun colorItemDrawer() = NavigationDrawerItemDefaults.colors(
 
 fun iconoDe(seccion: AppSection): ImageVector = when (seccion) {
     AppSection.PRECHEQUEO -> Icons.Filled.Add
+    AppSection.BITACORA -> Icons.Filled.Speed
     AppSection.HISTORIAL -> Icons.Filled.History
     AppSection.APROBACIONES -> Icons.Filled.CheckCircle
     AppSection.RESUMEN -> Icons.Filled.BarChart

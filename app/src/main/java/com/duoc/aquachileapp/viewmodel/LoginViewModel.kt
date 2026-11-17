@@ -35,26 +35,42 @@ class LoginViewModel : ViewModel() {
     }
 
     fun iniciarSesion(cuentas: CuentasViewModel): Usuario? {
+        val u = usuario.trim()
+        val p = contrasena.trim()
 
-        if (usuario.isBlank() || contrasena.isBlank()) {
-            error = "Completa tu RUT o correo y tu contraseña"
+        if (u.isBlank() || p.isBlank()) {
+            error = "Completa tu correo/RUT y contraseña"
             return null
         }
 
-        val cuenta = cuentas.buscar(usuario, contrasena)
+        val existeUsuario = cuentas.cuentas.any {
+            it.usuario.equals(u, ignoreCase = true) || it.correo.equals(u, ignoreCase = true)
+        }
+
+        if (!existeUsuario) {
+            error = "El correo o RUT ingresado no está registrado"
+            return null
+        }
+
+        val cuenta = cuentas.buscar(u, p)
 
         if (cuenta == null) {
-            error = "Credenciales incorrectas"
+            error = "La contraseña ingresada es incorrecta"
             return null
         }
 
         if (!cuenta.aprobada) {
-            error = "Tu cuenta aún no ha sido aprobada por un supervisor"
+            error = "Tu cuenta está pendiente de aprobación por un supervisor"
             return null
         }
 
         error = null
-        return Usuario(nombre = cuenta.nombre, rol = cuenta.rol, rut = cuenta.rut, telefono = cuenta.telefono,
-            correo = cuenta.correo)
+        return Usuario(
+            nombre = cuenta.nombre,
+            rol = cuenta.rol,
+            rut = cuenta.rut,
+            telefono = cuenta.telefono,
+            correo = cuenta.correo
+        )
     }
 }

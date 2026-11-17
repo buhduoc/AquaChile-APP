@@ -37,6 +37,7 @@ import com.duoc.aquachileapp.ui.screens.*
 import com.duoc.aquachileapp.viewmodel.CuentasViewModel
 import com.duoc.aquachileapp.viewmodel.HistorialViewModel
 import com.duoc.aquachileapp.viewmodel.HomeViewModel
+import com.duoc.aquachileapp.viewmodel.BitacoraViewModel
 import com.duoc.aquachileapp.viewmodel.NuevoViewModel
 import kotlinx.coroutines.launch
 
@@ -46,7 +47,8 @@ fun AppNavigation(
     vm: HomeViewModel = viewModel(),
     historial: HistorialViewModel = viewModel(),
     cuentas: CuentasViewModel = viewModel(),
-    nuevo: NuevoViewModel = viewModel()
+    nuevo: NuevoViewModel = viewModel(),
+    bitacora: BitacoraViewModel = viewModel()
 ) {
 
     val navController = rememberNavController()
@@ -116,6 +118,9 @@ fun AppNavigation(
                                 AppSection.PRECHEQUEO ->
                                     rutaActual == "prechequeo"
 
+                                AppSection.BITACORA ->
+                                    rutaActual == "bitacora"
+
                                 AppSection.HISTORIAL ->
                                     rutaActual == "historial"
 
@@ -140,6 +145,10 @@ fun AppNavigation(
 
                                         AppSection.PRECHEQUEO -> {
                                             navController.navigate("prechequeo")
+                                        }
+
+                                        AppSection.BITACORA -> {
+                                            navController.navigate("bitacora")
                                         }
 
                                         AppSection.HISTORIAL -> {
@@ -348,6 +357,13 @@ fun AppNavigation(
                     )
                 }
 
+                composable("bitacora") {
+                    BitacoraScreen(
+                        vm = bitacora,
+                        nombreBuzo = vm.usuario?.nombre
+                    )
+                }
+
                 composable("checklist") {
                     ChecklistScreen(
                         onGuardar = { items, observaciones, fotos ->
@@ -409,9 +425,12 @@ fun AppNavigation(
 
                 composable("perfil"){
                     PerfilScreen(
-                        usuario = vm.usuario
+                        usuario = vm.usuario,
+                        cuentas = cuentas,
+                        onActualizarPerfil = { usuarioActualizado ->
+                            vm.iniciarSesion(usuarioActualizado)
+                        }
                     )
-
                 }
 
                 composable("registro") {

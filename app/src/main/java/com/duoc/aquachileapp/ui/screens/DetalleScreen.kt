@@ -19,6 +19,8 @@ import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.HealthAndSafety
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
@@ -29,6 +31,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -49,6 +52,7 @@ import com.duoc.aquachileapp.ui.components.EtiquetaResultado
 import com.duoc.aquachileapp.ui.components.EtiquetaSalud
 import com.duoc.aquachileapp.ui.components.FondoBarra
 import com.duoc.aquachileapp.ui.components.Fotos
+import com.duoc.aquachileapp.ui.components.TarjetaEvidenciaEquipo
 import com.duoc.aquachileapp.ui.theme.FondoApp
 import com.duoc.aquachileapp.ui.theme.Morado
 import com.duoc.aquachileapp.ui.theme.TextoOscuro
@@ -114,6 +118,7 @@ fun DetalleScreen(
     val context = LocalContext.current
     val preChequeo = vm.buscar(id)
     var mostrarDialogoEliminar by remember { mutableStateOf(false) }
+    var mostrarModalValidacion by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -192,6 +197,21 @@ fun DetalleScreen(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                             color = colorEstado(item.estado)
+                        )
+                    }
+                }
+            }
+
+            // ---- Evidencia Fotográfica de Equipos y Línea Base ----
+            if (preChequeo.evidenciasEquipos.isNotEmpty()) {
+                SeccionBlanca("Evidencia Fotográfica de Equipos (Línea Base Zarpe)") {
+                    preChequeo.evidenciasEquipos.forEach { evidencia ->
+                        TarjetaEvidenciaEquipo(
+                            evidencia = evidencia,
+                            onTomarFoto = {},
+                            onGaleria = {},
+                            onEliminar = {},
+                            editable = false
                         )
                     }
                 }
@@ -289,15 +309,101 @@ fun DetalleScreen(
             }
         }
 
-        Button(
-            onClick = onVolver,
-            shape = RoundedCornerShape(24.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("Volver")
+            if (preChequeo != null) {
+                OutlinedButton(
+                    onClick = { mostrarModalValidacion = true },
+                    shape = RoundedCornerShape(24.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Morado),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(50.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.HealthAndSafety,
+                        contentDescription = "Validación",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text("Validación", fontWeight = FontWeight.Bold)
+                }
+            }
+
+            Button(
+                onClick = onVolver,
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp)
+            ) {
+                Text("Volver", fontWeight = FontWeight.Bold)
+            }
         }
+    }
+
+    if (mostrarModalValidacion && preChequeo != null) {
+        val valRes = preChequeo.validacion
+
+        AlertDialog(
+            onDismissRequest = { mostrarModalValidacion = false },
+            title = {
+                Text("Validación de Seguridad", fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Surface(
+                        color = valRes.semaforo.color.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (valRes.estaBloqueado) Icons.Default.Lock else Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = valRes.semaforo.color
+                            )
+                            Text(
+                                text = valRes.semaforo.titulo,
+                                color = valRes.semaforo.color,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
+
+                    Text("• IMC: ${valRes.imc} kg/m² (${valRes.imcCategoria})", fontSize = 13.sp, color = TextoOscuro)
+                    Text("• Edad: ${preChequeo.edad} años | Test Esfuerzo: ${if (preChequeo.testEsfuerzoVigente) "Vigente" else "No Vigente / Pendiente"}", fontSize = 13.sp, color = TextoOscuro)
+                    Text("• Examen Preocupacional: ${if (preChequeo.examenPreocupacionalVigente) "Vigente" else "Vencido"}", fontSize = 13.sp, color = TextoOscuro)
+                    Text("• Escuela de Buceo Calbuco: ${preChequeo.puntajeEscuelaCalbuco}/100 pts", fontSize = 13.sp, color = TextoOscuro)
+
+                    if (valRes.motivosBloqueo.isNotEmpty()) {
+                        Text("Motivos de Bloqueo:", fontWeight = FontWeight.Bold, color = Color(0xFFDC2626), fontSize = 13.sp)
+                        valRes.motivosBloqueo.forEach { motivo ->
+                            Text("⛔ $motivo", color = Color(0xFF991B1B), fontSize = 12.sp)
+                        }
+                    }
+
+                    if (valRes.advertencias.isNotEmpty()) {
+                        Text("Advertencias:", fontWeight = FontWeight.Bold, color = Color(0xFFD97706), fontSize = 13.sp)
+                        valRes.advertencias.forEach { adv ->
+                            Text("⚠️ $adv", color = Color(0xFFB45309), fontSize = 12.sp)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = { mostrarModalValidacion = false }) {
+                    Text("Cerrar")
+                }
+            }
+        )
     }
 
     if (mostrarDialogoEliminar) {
