@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Save
@@ -34,6 +33,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -51,6 +51,7 @@ import com.duoc.aquachileapp.domain.Reglas
 import com.duoc.aquachileapp.model.SemaforoRiesgo
 import com.duoc.aquachileapp.model.Usuario
 import com.duoc.aquachileapp.ui.components.Campo
+import com.duoc.aquachileapp.ui.components.PastillaTab
 import com.duoc.aquachileapp.ui.theme.Morado
 import com.duoc.aquachileapp.viewmodel.CuentasViewModel
 
@@ -60,6 +61,8 @@ fun PerfilScreen(
     cuentas: CuentasViewModel? = null,
     onActualizarPerfil: ((Usuario) -> Unit)? = null
 ) {
+    var tabPerfilSeleccionada by remember { mutableIntStateOf(0) }
+
     val nombre = usuario?.nombre ?: "Usuario"
     val rol = usuario?.rol ?: "Sin rol"
     val rut = usuario?.rut ?: "Sin rut"
@@ -135,214 +138,238 @@ fun PerfilScreen(
             )
         }
 
-        // Card Información personal
-        Card(
+        // Pestañas Internas del Perfil
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally)
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Información del usuario",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF374151)
-                    )
+            PastillaTab(
+                texto = "Información Personal",
+                seleccionada = tabPerfilSeleccionada == 0,
+                onClick = { tabPerfilSeleccionada = 0 }
+            )
 
-                    Box(
-                        modifier = Modifier
-                            .background(color = Color(0xFFBDF5E7), shape = RoundedCornerShape(20.dp))
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = "Perfil Activo",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF168C79)
-                        )
-                    }
-                }
-
-                DatoPerfil(titulo = "Nombre", valor = nombre)
-                SeparadorPerfil()
-                DatoPerfil(titulo = "Rol", valor = rol)
-                SeparadorPerfil()
-                DatoPerfil(titulo = "RUT", valor = rut)
-                SeparadorPerfil()
-                DatoPerfil(titulo = "Teléfono", valor = telefono)
-                SeparadorPerfil()
-                DatoPerfil(titulo = "Correo", valor = correo)
-            }
+            PastillaTab(
+                texto = "Biométricos y Buceo",
+                seleccionada = tabPerfilSeleccionada == 1,
+                onClick = { tabPerfilSeleccionada = 1 }
+            )
         }
 
-        // Card Datos Biométricos y Acreditaciones de Buceo
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = "Datos Biométricos y Acreditaciones de Buceo",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF374151)
-                )
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Campo(edadStr, { edadStr = it; mensajeGuardado = null }, "Edad (años)", Modifier.weight(1f), numero = true)
-                    Campo(pesoStr, { pesoStr = it; mensajeGuardado = null }, "Peso (kg)", Modifier.weight(1f), numero = true)
-                    Campo(alturaStr, { alturaStr = it; mensajeGuardado = null }, "Altura (cm)", Modifier.weight(1f), numero = true)
-                }
-
+        when (tabPerfilSeleccionada) {
+            0 -> {
+                // Card 0: Información personal
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB)),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Examen Preocupacional Vigente", style = MaterialTheme.typography.bodyMedium)
-                            Switch(
-                                checked = examenVigente,
-                                onCheckedChange = { examenVigente = it; mensajeGuardado = null },
-                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Morado)
+                            Text(
+                                text = "Información del usuario",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF374151)
                             )
+
+                            Box(
+                                modifier = Modifier
+                                    .background(color = Color(0xFFBDF5E7), shape = RoundedCornerShape(20.dp))
+                                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "Perfil Activo",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFF168C79)
+                                )
+                            }
                         }
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("Test de Esfuerzo Vigente (>45 años)", style = MaterialTheme.typography.bodyMedium)
-                            Switch(
-                                checked = testVigente,
-                                onCheckedChange = { testVigente = it; mensajeGuardado = null },
-                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Morado)
-                            )
-                        }
-
-                        Campo(
-                            valor = puntajeCalbucoStr,
-                            alCambiar = { puntajeCalbucoStr = it; mensajeGuardado = null },
-                            etiqueta = "Puntaje Escuela Buceo Calbuco (0-100 pts)",
-                            numero = true
-                        )
+                        DatoPerfil(titulo = "Nombre", valor = nombre)
+                        SeparadorPerfil()
+                        DatoPerfil(titulo = "Rol", valor = rol)
+                        SeparadorPerfil()
+                        DatoPerfil(titulo = "RUT", valor = rut)
+                        SeparadorPerfil()
+                        DatoPerfil(titulo = "Teléfono", valor = telefono)
+                        SeparadorPerfil()
+                        DatoPerfil(titulo = "Correo", valor = correo)
                     }
                 }
+            }
 
-                // Tarjeta Semáforo del Perfil
+            1 -> {
+                // Card 1: Datos Biométricos y Acreditaciones de Buceo
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = valPerfil.semaforo.color.copy(alpha = 0.12f)),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (valPerfil.estaBloqueado) Icons.Default.Lock else if (valPerfil.semaforo == SemaforoRiesgo.AMARILLO) Icons.Default.Warning else Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = valPerfil.semaforo.color,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Text(
-                                text = "Semáforo Perfil: ${valPerfil.semaforo.titulo}",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = valPerfil.semaforo.color
-                            )
-                        }
-
                         Text(
-                            text = "IMC: ${valPerfil.imc} kg/m² (${valPerfil.imcCategoria})",
-                            style = MaterialTheme.typography.bodySmall,
+                            text = "Datos Biométricos y Acreditaciones de Buceo",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
                             color = Color(0xFF374151)
                         )
 
-                        if (valPerfil.estaBloqueado) {
-                            Surface(
-                                color = Color(0xFFFEE2E2),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.fillMaxWidth()
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Campo(edadStr, { edadStr = it; mensajeGuardado = null }, "Edad (años)", Modifier.weight(1f), numero = true)
+                            Campo(pesoStr, { pesoStr = it; mensajeGuardado = null }, "Peso (kg)", Modifier.weight(1f), numero = true)
+                            Campo(alturaStr, { alturaStr = it; mensajeGuardado = null }, "Altura (cm)", Modifier.weight(1f), numero = true)
+                        }
+
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB)),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Column(modifier = Modifier.padding(8.dp)) {
-                                    Text("⛔ REQUISITOS DE PERFIL INCUMPLIDOS:", color = Color(0xFFDC2626), fontWeight = FontWeight.Bold, fontSize = 11.sp)
-                                    valPerfil.motivosBloqueo.forEach { m ->
-                                        Text("• $m", color = Color(0xFF991B1B), fontSize = 11.sp)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("Examen Preocupacional Vigente", style = MaterialTheme.typography.bodyMedium)
+                                    Switch(
+                                        checked = examenVigente,
+                                        onCheckedChange = { examenVigente = it; mensajeGuardado = null },
+                                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Morado)
+                                    )
+                                }
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("Test de Esfuerzo Vigente (>45 años)", style = MaterialTheme.typography.bodyMedium)
+                                    Switch(
+                                        checked = testVigente,
+                                        onCheckedChange = { testVigente = it; mensajeGuardado = null },
+                                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Morado)
+                                    )
+                                }
+
+                                Campo(
+                                    valor = puntajeCalbucoStr,
+                                    alCambiar = { puntajeCalbucoStr = it; mensajeGuardado = null },
+                                    etiqueta = "Puntaje Escuela Buceo Calbuco (0-100 pts)",
+                                    numero = true
+                                )
+                            }
+                        }
+
+                        // Tarjeta Semáforo del Perfil
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = valPerfil.semaforo.color.copy(alpha = 0.12f)),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = if (valPerfil.estaBloqueado) Icons.Default.Lock else if (valPerfil.semaforo == SemaforoRiesgo.AMARILLO) Icons.Default.Warning else Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        tint = valPerfil.semaforo.color,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = "Semáforo Perfil: ${valPerfil.semaforo.titulo}",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = valPerfil.semaforo.color
+                                    )
+                                }
+
+                                Text(
+                                    text = "IMC: ${valPerfil.imc} kg/m² (${valPerfil.imcCategoria})",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF374151)
+                                )
+
+                                if (valPerfil.estaBloqueado) {
+                                    Surface(
+                                        color = Color(0xFFFEE2E2),
+                                        shape = RoundedCornerShape(8.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Column(modifier = Modifier.padding(8.dp)) {
+                                            Text("⛔ REQUISITOS DE PERFIL INCUMPLIDOS:", color = Color(0xFFDC2626), fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                            valPerfil.motivosBloqueo.forEach { m ->
+                                                Text("• $m", color = Color(0xFF991B1B), fontSize = 11.sp)
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                }
 
-                Button(
-                    onClick = {
-                        if (usuario != null) {
-                            val usuarioAct = usuario.copy(
-                                edad = edadNum,
-                                pesoKg = pesoNum,
-                                alturaCm = alturaNum,
-                                examenPreocupacionalVigente = examenVigente,
-                                testEsfuerzoVigente = testVigente,
-                                puntajeEscuelaCalbuco = puntajeNum
-                            )
-                            cuentas?.actualizarBiometricos(
-                                usuarioId = usuario.correo.ifBlank { usuario.rut },
-                                edad = edadNum,
-                                pesoKg = pesoNum,
-                                alturaCm = alturaNum,
-                                examenVigente = examenVigente,
-                                testVigente = testVigente,
-                                puntajeCalbuco = puntajeNum
-                            )
-                            onActualizarPerfil?.invoke(usuarioAct)
-                            mensajeGuardado = "Acreditaciones de perfil actualizadas correctamente"
+                        Button(
+                            onClick = {
+                                if (usuario != null) {
+                                    val usuarioAct = usuario.copy(
+                                        edad = edadNum,
+                                        pesoKg = pesoNum,
+                                        alturaCm = alturaNum,
+                                        examenPreocupacionalVigente = examenVigente,
+                                        testEsfuerzoVigente = testVigente,
+                                        puntajeEscuelaCalbuco = puntajeNum
+                                    )
+                                    cuentas?.actualizarBiometricos(
+                                        usuarioId = usuario.correo.ifBlank { usuario.rut },
+                                        edad = edadNum,
+                                        pesoKg = pesoNum,
+                                        alturaCm = alturaNum,
+                                        examenVigente = examenVigente,
+                                        testVigente = testVigente,
+                                        puntajeCalbuco = puntajeNum
+                                    )
+                                    onActualizarPerfil?.invoke(usuarioAct)
+                                    mensajeGuardado = "Acreditaciones de perfil actualizadas correctamente"
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Morado, contentColor = Color.White),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp)
+                        ) {
+                            Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Text(" Guardar Biométricos de Perfil", fontWeight = FontWeight.Bold)
                         }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Morado, contentColor = Color.White),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(46.dp)
-                ) {
-                    Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Text(" Guardar Biométricos de Perfil", fontWeight = FontWeight.Bold)
-                }
 
-                mensajeGuardado?.let { msj ->
-                    Text(
-                        text = msj,
-                        color = Color(0xFF047857),
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold
-                    )
+                        mensajeGuardado?.let { msj ->
+                            Text(
+                                text = msj,
+                                color = Color(0xFF047857),
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
         }
