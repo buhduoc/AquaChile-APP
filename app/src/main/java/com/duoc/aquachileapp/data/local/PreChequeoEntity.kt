@@ -22,7 +22,16 @@ data class PreChequeoEntity(
     val sistolica: Int,
     val diastolica: Int,
     val saturacion: Int,
-    val alertasJson: String
+    val alertasJson: String,
+
+    val edad: Int,
+    val pesoKg: Double,
+    val alturaCm: Double,
+
+    val examenPreocupacionalVigente: Boolean,
+    val testEsfuerzoVigente: Boolean,
+
+    val puntajeEscuelaCalbuco: Int
 )
 
 class Converters {
@@ -65,7 +74,13 @@ fun PreChequeoEntity.toDomain(): PreChequeo {
         sistolica = sistolica,
         diastolica = diastolica,
         saturacion = saturacion,
-        alertas = converters.toStringList(alertasJson)
+        alertas = converters.toStringList(alertasJson),
+        edad = edad,
+        pesoKg = pesoKg,
+        alturaCm = alturaCm,
+        examenPreocupacionalVigente = examenPreocupacionalVigente,
+        testEsfuerzoVigente = testEsfuerzoVigente,
+        puntajeEscuelaCalbuco = puntajeEscuelaCalbuco
     )
 }
 
@@ -83,6 +98,13 @@ fun PreChequeo.toEntity(): PreChequeoEntity {
         sistolica = sistolica,
         diastolica = diastolica,
         saturacion = saturacion,
-        alertasJson = converters.fromStringList(alertas)
+        alertasJson = converters.fromStringList(alertas),
+        edad=edad,
+        pesoKg = pesoKg,
+        alturaCm = alturaCm,
+        examenPreocupacionalVigente = examenPreocupacionalVigente,
+        testEsfuerzoVigente = testEsfuerzoVigente,
+        puntajeEscuelaCalbuco = puntajeEscuelaCalbuco
+
     )
 }

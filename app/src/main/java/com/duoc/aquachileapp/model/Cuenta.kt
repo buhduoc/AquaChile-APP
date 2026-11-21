@@ -1,6 +1,7 @@
 package com.duoc.aquachileapp.model
 
 data class Cuenta(
+    val id:Long? =null,
     val usuario: String,
     val clave: String,
     val nombre: String,
@@ -9,6 +10,7 @@ data class Cuenta(
     val telefono: String,
     val correo: String,
     val aprobada: Boolean,
+
     val edad: Int = 45,
     val pesoKg: Double = 80.0,
     val alturaCm: Double = 172.0,

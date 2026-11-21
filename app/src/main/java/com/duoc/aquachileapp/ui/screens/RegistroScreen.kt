@@ -28,6 +28,7 @@ fun RegistroScreen(
     var rut by remember { mutableStateOf("") }
     var telefono by remember { mutableStateOf("") }
     var correo by remember { mutableStateOf("") }
+
     var error by remember { mutableStateOf<String?>(null) }
     var enviado by remember { mutableStateOf(false) }
 
@@ -78,6 +79,8 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
+
+            //NOMBRE
             TextField(
                 value = nombre,
                 onValueChange = {
@@ -92,13 +95,15 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+
+            //USUARIO
             TextField(
                 value = usuario,
                 onValueChange = {
                     usuario = it
                     error = null
                 },
-                label = { Text("RUT o correo corporativo") },
+                label = { Text("Nombre de usuario") },
                 singleLine = true,
                 colors = coloresCampoLogin(),
                 modifier = Modifier.fillMaxWidth()
@@ -106,6 +111,23 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+
+            //RUT
+            TextField(
+                value = rut,
+                onValueChange = {
+                    rut = it
+                    error = null
+                },
+                label = { Text("RUT") },
+                singleLine = true,
+                colors = coloresCampoLogin(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            //CLAVE
             TextField(
                 value = clave,
                 onValueChange = {
@@ -128,6 +150,37 @@ fun RegistroScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            // TELÉFONO
+            TextField(
+                value = telefono,
+                onValueChange = {
+                    telefono = it
+                    error = null
+                },
+                label = { Text("Teléfono") },
+                singleLine = true,
+                colors = coloresCampoLogin(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // CORREO
+            TextField(
+                value = correo,
+                onValueChange = {
+                    correo = it
+                    error = null
+                },
+                label = { Text("Correo corporativo") },
+                singleLine = true,
+                colors = coloresCampoLogin(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
 
             Button(
                 onClick = {

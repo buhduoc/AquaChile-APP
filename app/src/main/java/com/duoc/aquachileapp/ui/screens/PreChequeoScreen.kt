@@ -109,7 +109,12 @@ fun PreChequeoScreen(
     var equipoTargetId by rememberSaveable { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
-        vm.prepararDatos(usuario)
+        // Solo cargar datos del usuario
+        // cuando estamos creando uno nuevo.
+        if (vm.idEnEdicion == null) {
+
+            vm.prepararDatos(usuario)
+        }
     }
 
     val camaraLauncher = rememberLauncherForActivityResult(
@@ -250,6 +255,120 @@ fun PreChequeoScreen(
                     ) {
                         Text("• Escuela de Buceo Calbuco:", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4B5563))
                         Text("${vm.puntajeEscuelaCalbuco} / 100 pts", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color(0xFF111827))
+                    }
+                }
+            }
+            // ---- Datos editables del Perfil del Buzo ----
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFF9FAFB)
+                ),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+
+                    Text(
+                        text = "Datos del perfil del buzo",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1F2937)
+                    )
+
+
+                    // Edad y peso
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+
+                        Campo(
+                            valor = vm.edad,
+                            alCambiar = { vm.edad = it },
+                            etiqueta = "Edad",
+                            modifier = Modifier.weight(1f),
+                            numero = true
+                        )
+
+                        Campo(
+                            valor = vm.pesoKg,
+                            alCambiar = { vm.pesoKg = it },
+                            etiqueta = "Peso (kg)",
+                            modifier = Modifier.weight(1f),
+                            numero = true
+                        )
+                    }
+
+
+                    // Altura y puntaje
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+
+                        Campo(
+                            valor = vm.alturaCm,
+                            alCambiar = { vm.alturaCm = it },
+                            etiqueta = "Altura (cm)",
+                            modifier = Modifier.weight(1f),
+                            numero = true
+                        )
+
+                        Campo(
+                            valor = vm.puntajeEscuelaCalbuco,
+                            alCambiar = {
+                                vm.puntajeEscuelaCalbuco = it
+                            },
+                            etiqueta = "Puntaje Calbuco",
+                            modifier = Modifier.weight(1f),
+                            numero = true
+                        )
+                    }
+
+
+                    // Examen preocupacional
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        Checkbox(
+                            checked =
+                                vm.examenPreocupacionalVigente,
+
+                            onCheckedChange = {
+                                vm.examenPreocupacionalVigente = it
+                            }
+                        )
+
+                        Text(
+                            text = "Examen preocupacional vigente",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+
+
+                    // Test de esfuerzo
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        Checkbox(
+                            checked =
+                                vm.testEsfuerzoVigente,
+
+                            onCheckedChange = {
+                                vm.testEsfuerzoVigente = it
+                            }
+                        )
+
+                        Text(
+                            text = "Test de esfuerzo vigente",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
             }
@@ -597,7 +716,15 @@ fun PreChequeoScreen(
                         Spacer(Modifier.width(8.dp))
                         Text("Guardado Bloqueado por Seguridad", fontWeight = FontWeight.Bold)
                     } else {
-                        Text("Guardar pre-chequeo", fontWeight = FontWeight.Bold)
+                        Text(
+                            text =
+                                if (vm.idEnEdicion != null)
+                                    "Guardar cambios"
+                                else
+                                    "Guardar pre-chequeo",
+
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }

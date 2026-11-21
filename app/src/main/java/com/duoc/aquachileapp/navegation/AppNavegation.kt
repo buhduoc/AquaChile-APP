@@ -360,7 +360,19 @@ fun AppNavigation(
                 composable("bitacora") {
                     BitacoraScreen(
                         vm = bitacora,
-                        nombreBuzo = vm.usuario?.nombre
+
+                        nombreBuzo =
+                            if (vm.usuario?.esSupervisor == false) {
+                                vm.usuario?.nombre
+                            } else {
+                                null
+                            },
+                        nombreSupervisor =
+                            if (vm.usuario?.esSupervisor == true) {
+                                vm.usuario?.nombre
+                            } else {
+                                null
+                            }
                     )
                 }
 
@@ -391,17 +403,113 @@ fun AppNavigation(
 
                 composable(
                     route = "detalle/{id}",
-                    arguments = listOf(navArgument("id") { type = NavType.IntType })
+                    arguments = listOf(
+                        navArgument("id") {
+                            type = NavType.IntType
+                        }
+                    )
                 ) { entrada ->
+
                     DetalleScreen(
                         vm = historial,
-                        id = entrada.arguments?.getInt("id") ?: 0,
+                        id = entrada.arguments
+                                ?.getInt("id")
+                                ?: 0,
+
                         esSupervisor = vm.usuario?.esSupervisor == true,
+
+                        // NUEVO
+                        onEditar = { id ->
+
+                            // Limpiamos posibles datos
+                            // de un formulario anterior
+                            nuevo.limpiar()
+
+                            navController.navigate(
+                                "editar_prechequeo/$id"
+                            )
+                        },
+
+
                         onVolver = {
                             navController.popBackStack()
                         }
                     )
                 }
+
+                composable(
+                    route = "editar_prechequeo/{id}",
+
+                    arguments = listOf(
+                        navArgument("id") {
+                            type = NavType.IntType
+                        }
+                    )
+                ) { entrada ->
+
+
+                    val id =
+                        entrada.arguments
+                            ?.getInt("id")
+                            ?: 0
+
+
+                    val preChequeo =
+                        historial.buscar(id)
+
+
+                    if (preChequeo != null) {
+
+                        /*
+                         * Cargamos una sola vez los datos
+                         * existentes en NuevoViewModel.
+                         */
+                        LaunchedEffect(id) {
+
+                            nuevo.cargarParaEditar(
+                                preChequeo
+                            )
+                        }
+
+
+                        /*
+                         * Esperamos hasta que el ViewModel
+                         * realmente haya cargado ese registro.
+                         */
+                        if (nuevo.idEnEdicion == id) {
+
+                            PreChequeoScreen(
+                                vm = nuevo,
+
+                                usuario = vm.usuario,
+
+                                onGuardar = { actualizado ->
+
+                                    // Aquí NO usamos agregar()
+                                    // porque ya existe.
+                                    historial.actualizar(
+                                        actualizado
+                                    )
+
+
+                                    // Limpiar modo edición
+                                    nuevo.limpiar()
+
+
+                                    // Volver al detalle
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
+                    } else {
+
+                        Text(
+                            text = "No se encontró el pre-chequeo"
+                        )
+                    }
+                }
+
 
                 composable("aprobaciones") {
                     if (vm.usuario?.esSupervisor == true) {
