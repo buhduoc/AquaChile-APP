@@ -29,6 +29,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,7 +49,8 @@ import com.duoc.aquachileapp.viewmodel.BitacoraViewModel
 @Composable
 fun BitacoraScreen(
     vm: BitacoraViewModel = viewModel(),
-    nombreBuzo: String? = null
+    nombreBuzo: String? = null,
+    nombreSupervisor: String? = null
 ) {
     val vDescNum = vm.velDescensoStr.toDoubleOrNull() ?: 0.0
     val vAscNum = vm.velAscensoStr.toDoubleOrNull() ?: 0.0
@@ -113,7 +115,8 @@ fun BitacoraScreen(
             Campo(
                 valor = vm.buzo.ifBlank { nombreBuzo ?: "" },
                 alCambiar = { vm.buzo = it },
-                etiqueta = "Buzo A Cargo"
+                etiqueta = "Buzo A Cargo",
+                modifier = Modifier.fillMaxWidth()
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -212,6 +215,14 @@ fun BitacoraScreen(
                     style = MaterialTheme.typography.bodySmall
                 )
             }
+            vm.errorServidor?.let { err ->
+
+                Text(
+                    text = err,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             Button(
                 onClick = {
@@ -233,7 +244,19 @@ fun BitacoraScreen(
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = if (hayAlertaEnVivo) "Guardar y Notificar Alerta a Jefe de Centro" else "Guardar Registros de Inmersión",
+                    text =
+                        if (vm.idEnEdicion != null) {
+
+                            "Guardar cambios"
+
+                        } else if (hayAlertaEnVivo) {
+
+                            "Guardar y Notificar Alerta a Jefe de Centro"
+
+                        } else {
+
+                            "Guardar Registros de Inmersión"
+                        },
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -261,37 +284,99 @@ fun BitacoraScreen(
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+                            // ESTADO ARRIBA para no alterar los mensajes de alerta o parametros normales
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                horizontalArrangement = Arrangement.End
                             ) {
-                                Text(
-                                    text = "${bit.centro} · ${bit.buzo}",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF111827)
-                                )
 
                                 Surface(
-                                    color = if (bit.tieneAlerta) Color(0xFFFEE2E2) else Color(0xFFD1FAE5),
+                                    color =
+                                        if (bit.tieneAlerta) {
+                                            Color(0xFFFEE2E2)
+                                        } else {
+                                            Color(0xFFD1FAE5)
+                                        },
+
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
+
                                     Text(
-                                        text = if (bit.tieneAlerta) "Alerta Jefe Centro 🚨" else "Parámetros Normales ✓",
-                                        color = if (bit.tieneAlerta) Color(0xFFDC2626) else Color(0xFF047857),
-                                        style = MaterialTheme.typography.labelSmall,
+                                        text =
+                                            if (bit.tieneAlerta) {
+                                                "Alerta Jefe Centro 🚨"
+                                            } else {
+                                                "Parámetros Normales ✓"
+                                            },
+
+                                        color =
+                                            if (bit.tieneAlerta) {
+                                                Color(0xFFDC2626)
+                                            } else {
+                                                Color(0xFF047857)
+                                            },
+
+                                        fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+
+                                        modifier = Modifier.padding(
+                                            horizontal = 10.dp,
+                                            vertical = 5.dp
+                                        )
                                     )
                                 }
                             }
 
+
+                            // NOMBRE ABAJO
+                            Text(
+                                text = "${bit.centro} · ${bit.buzo}",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF111827),
+                                modifier = Modifier.fillMaxWidth()
+                            )
                             Text(
                                 text = "Fecha/Hora: ${bit.fechaHora} | Fondo: ${bit.tiempoFondoMin} min | Prof: ${bit.profundidadMaxM} m",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF4B5563)
                             )
+
+                            //MOSTRAR ESTADO DE REVISION
+                            Surface(
+                                color =
+                                    if (bit.estadoRevision == "REVISADA") {
+                                        Color(0xFFD1FAE5)
+                                    } else {
+                                        Color(0xFFFEF3C7)
+                                    },
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+
+                                Text(
+                                    text =
+                                        if (bit.estadoRevision == "REVISADA") {
+
+                                            "✓ Revisada"
+
+                                        } else {
+
+                                            "Pendiente de revisión"
+                                        },
+                                    color =
+                                        if (bit.estadoRevision == "REVISADA") {
+                                            Color(0xFF047857)
+                                        } else {
+                                            Color(0xFFB45309)
+                                        },
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(
+                                        horizontal = 10.dp,
+                                        vertical = 5.dp
+                                    )
+                                )
+                            }
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -350,7 +435,108 @@ fun BitacoraScreen(
                             }
 
                             if (bit.observaciones.isNotEmpty()) {
-                                Text("Observaciones: ${bit.observaciones}", style = MaterialTheme.typography.bodySmall, color = Color(0xFF374151))
+                                Text("Observaciones: ${bit.observaciones}", style = MaterialTheme.typography.bodySmall, color = Color(0xFF374151)
+                                )
+                            }
+
+
+                            // ACCIONES DE LA BITÁCORA
+
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+
+                                // EDITAR
+                                Button(
+                                    onClick = {
+                                        vm.cargarParaEditar(bit)
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = "Editar",
+                                        fontSize = 12.sp
+                                    )
+                                }
+
+
+                                // ELIMINAR
+                                OutlinedButton(
+                                    onClick = {
+                                        vm.eliminar(bit)
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = "Eliminar",
+                                        color = Color.Red,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+
+
+
+                            // REVISIÓN DEL SUPERVISOR
+
+
+                            if (bit.estadoRevision != "REVISADA") {
+
+                                Button(
+                                    onClick = {
+
+                                        vm.revisar(
+                                            bitacora = bit,
+                                            responsable =
+                                                nombreSupervisor
+                                                    ?: "Supervisor"
+                                        )
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+
+                                    Text(
+                                        "Marcar como revisada"
+                                    )
+                                }
+
+                            } else {
+
+                                Surface(
+                                    color = Color(0xFFD1FAE5),
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+
+                                    Column(
+                                        modifier = Modifier.padding(10.dp)
+                                    ) {
+
+                                        Text(
+                                            text = "✓ Bitácora revisada",
+                                            color = Color(0xFF047857),
+                                            fontWeight = FontWeight.Bold
+                                        )
+
+                                        bit.responsableRevision?.let {
+
+                                            Text(
+                                                text = "Responsable: $it",
+                                                fontSize = 11.sp
+                                            )
+                                        }
+
+                                        bit.fechaRevision?.let {
+
+                                            Text(
+                                                text = "Fecha revisión: $it",
+                                                fontSize = 11.sp
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

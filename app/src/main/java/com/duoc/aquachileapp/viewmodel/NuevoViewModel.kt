@@ -30,8 +30,13 @@ class NuevoViewModel : ViewModel() {
 
     val fotos = mutableStateListOf<String>()
 
+    var idEnEdicion by mutableStateOf<Int?>(null)
+        private set
+
+    private var fechaEnEdicion: String? = null
+
     val evidenciasEquipos = mutableStateListOf(
-        EvidenciaEquipo("maleta_aire", "Maleta de Suministro de Aire", resFotoReferencia = R.drawable.maleta_suministro),
+        EvidenciaEquipo("maleta_aire", "Maleta de Suministro de Aire", resFotoReferencia = R.drawable.maleta_suministro_1),
         EvidenciaEquipo("filtros_compresor", "Filtros del Compresor", resFotoReferencia = R.drawable.filtros_compresor),
         EvidenciaEquipo("aletas_buceo", "Aletas de Buceo", resFotoReferencia = R.drawable.aletas),
         EvidenciaEquipo("dispositivo_census", "Dispositivo Census", resFotoReferencia = R.drawable.dispositivo_census)
@@ -183,6 +188,87 @@ class NuevoViewModel : ViewModel() {
         }
     }
 
+    fun cargarParaEditar(
+        preChequeo: PreChequeo
+    ) {
+
+        // Guardamos ID y fecha originales
+        idEnEdicion = preChequeo.id
+        fechaEnEdicion = preChequeo.fecha
+
+
+        centro = preChequeo.centro
+        buzo = preChequeo.buzo
+        supervisor = preChequeo.supervisor
+
+        observaciones = preChequeo.observaciones
+
+
+        // Checklist
+        items.clear()
+        items.addAll(
+            preChequeo.items
+        )
+
+
+        // Fotos
+        fotos.clear()
+        fotos.addAll(
+            preChequeo.fotos
+        )
+
+
+        // Salud
+        sistolica =
+            preChequeo.sistolica.toString()
+
+        diastolica =
+            preChequeo.diastolica.toString()
+
+        saturacion =
+            preChequeo.saturacion.toString()
+
+
+        // Alertas
+        alertas.clear()
+        alertas.addAll(
+            preChequeo.alertas
+        )
+
+
+        // Perfil del buzo
+        edad =
+            preChequeo.edad.toString()
+
+        pesoKg =
+            preChequeo.pesoKg.toString()
+
+        alturaCm =
+            preChequeo.alturaCm.toString()
+
+
+        examenPreocupacionalVigente =
+            preChequeo.examenPreocupacionalVigente
+
+        testEsfuerzoVigente =
+            preChequeo.testEsfuerzoVigente
+
+
+        puntajeEscuelaCalbuco =
+            preChequeo.puntajeEscuelaCalbuco.toString()
+
+
+        // Evidencias
+        evidenciasEquipos.clear()
+
+        evidenciasEquipos.addAll(
+            preChequeo.evidenciasEquipos
+        )
+
+
+        error = null
+    }
+
     fun crear(): PreChequeo? {
         val sis = sistolica.toIntOrNull()
         val dia = diastolica.toIntOrNull()
@@ -211,14 +297,20 @@ class NuevoViewModel : ViewModel() {
             return null
         }
 
-        val fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))
+        val fecha =
+            fechaEnEdicion
+                ?: LocalDateTime.now().format(
+                    DateTimeFormatter.ofPattern(
+                        "dd-MM-yyyy HH:mm"
+                    )
+                )
         val edadNum = edad.toIntOrNull() ?: 45
         val pesoNum = pesoKg.toDoubleOrNull() ?: 80.0
         val alturaNum = alturaCm.toDoubleOrNull() ?: 172.0
         val puntajeNum = puntajeEscuelaCalbuco.toIntOrNull() ?: 85
 
         return PreChequeo(
-            id = 0,
+            id = idEnEdicion?:0,
             centro = centro.trim(),
             fecha = fecha,
             buzo = buzo.trim(),
@@ -241,6 +333,10 @@ class NuevoViewModel : ViewModel() {
     }
 
     fun limpiar() {
+
+        idEnEdicion = null
+        fechaEnEdicion = null
+
         centro = "Centro Puerto Montt"
         buzo = ""
         supervisor = ""
@@ -268,5 +364,7 @@ class NuevoViewModel : ViewModel() {
         testEsfuerzoVigente = false
         puntajeEscuelaCalbuco = "85"
         error = null
+
+
     }
 }

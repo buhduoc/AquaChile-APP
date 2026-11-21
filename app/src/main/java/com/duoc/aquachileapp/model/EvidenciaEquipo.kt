@@ -10,7 +10,10 @@ data class EvidenciaEquipo(
     val fechaHora: String? = null,
     val idFaena: String? = null,
     val responsable: String? = null,
-    val resFotoReferencia: Int = R.drawable.aquachile_logo
+    val resFotoReferencia: Int = R.drawable.aquachile_logo,
+
+    // ID generado por Spring Boot / MySQL
+    val id: Long? = null
 )
 
 val EVIDENCIAS_OBLIGATORIAS_ZARPE = listOf(

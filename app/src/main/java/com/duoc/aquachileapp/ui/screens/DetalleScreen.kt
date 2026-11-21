@@ -1,5 +1,10 @@
 package com.duoc.aquachileapp.ui.screens
 
+import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Remove
@@ -35,9 +41,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,7 +55,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import com.duoc.aquachileapp.model.Estado
+import com.duoc.aquachileapp.model.EvidenciaEquipo
 import com.duoc.aquachileapp.ui.components.EtiquetaResultado
 import com.duoc.aquachileapp.ui.components.EtiquetaSalud
 import com.duoc.aquachileapp.ui.components.FondoBarra
@@ -58,6 +68,9 @@ import com.duoc.aquachileapp.ui.theme.Morado
 import com.duoc.aquachileapp.ui.theme.TextoOscuro
 import com.duoc.aquachileapp.ui.theme.TextoSuave
 import com.duoc.aquachileapp.viewmodel.HistorialViewModel
+import java.io.File
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 private fun iconoEstado(estado: Estado): ImageVector = when (estado) {
     Estado.CUMPLE -> Icons.Filled.CheckCircle
@@ -108,17 +121,218 @@ private fun DatoSalud(etiqueta: String, valor: String, modifier: Modifier = Modi
     }
 }
 
+private fun crearUriFotoDetalle(
+    context: Context
+): Uri {
+
+    val carpeta =
+        File(
+            context.cacheDir,
+            "fotos"
+        ).apply {
+            mkdirs()
+        }
+
+    val archivo =
+        File.createTempFile(
+            "evidencia_",
+            ".jpg",
+            carpeta
+        )
+
+    return FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider",
+        archivo
+    )
+}
+
+
+
 @Composable
 fun DetalleScreen(
     vm: HistorialViewModel,
     id: Int,
     esSupervisor: Boolean = false,
+    onEditar: (Int) -> Unit,
     onVolver: () -> Unit
 ) {
     val context = LocalContext.current
     val preChequeo = vm.buscar(id)
     var mostrarDialogoEliminar by remember { mutableStateOf(false) }
     var mostrarModalValidacion by remember { mutableStateOf(false) }
+
+
+
+    // =====================================================
+    // ESTADOS PARA EDITAR EVIDENCIAS
+    // =====================================================
+
+    /*
+     * Guarda temporalmente la URI donde
+     * la cámara va a guardar la nueva foto.
+     */
+    var uriFotoTomada by rememberSaveable {
+        mutableStateOf<Uri?>(null)
+    }
+
+
+    /*
+     * Guarda qué evidencia estamos modificando.
+     *
+     * Ejemplo:
+     * Maleta de Aire
+     * Filtros del Compresor
+     */
+    var evidenciaTarget by remember {
+        mutableStateOf<EvidenciaEquipo?>(null)
+    }
+
+
+    // =====================================================
+    // LAUNCHER 1 - CÁMARA
+    // =====================================================
+
+    val camaraEvidenciaLauncher =
+        rememberLauncherForActivityResult(
+            contract =
+                ActivityResultContracts.TakePicture()
+        ) { exito ->
+
+            if (exito) {
+
+                val evidencia =
+                    evidenciaTarget
+
+                val uri =
+                    uriFotoTomada
+
+
+                if (
+                    evidencia != null &&
+                    uri != null
+                ) {
+
+                    /*
+                     * Creamos una copia de la evidencia,
+                     * pero con la nueva fotografía.
+                     */
+                    val actualizada =
+                        evidencia.copy(
+
+                            uriFotoActual =
+                                uri.toString(),
+
+                            fechaHora =
+                                LocalDateTime.now()
+                                    .format(
+                                        DateTimeFormatter.ofPattern(
+                                            "dd-MM-yyyy HH:mm"
+                                        )
+                                    ),
+
+                            responsable =
+                                preChequeo?.supervisor
+                                    ?: evidencia.responsable
+                        )
+
+
+                    /*
+                     * AQUÍ SE HACE EL PUT
+                     *
+                     * PUT /api/evidencias/{id}
+                     */
+                    vm.actualizarEvidencia(
+                        actualizada
+                    )
+
+
+                    // Limpiar estados temporales
+                    evidenciaTarget = null
+                    uriFotoTomada = null
+                }
+            }
+        }
+
+
+    // =====================================================
+    // LAUNCHER 2 - GALERÍA
+    // =====================================================
+
+    val galeriaEvidenciaLauncher =
+        rememberLauncherForActivityResult(
+            contract =
+                ActivityResultContracts.PickVisualMedia()
+        ) { uri ->
+
+            if (uri != null) {
+
+                val evidencia =
+                    evidenciaTarget
+
+
+                if (evidencia != null) {
+
+                    /*
+                     * Mismo proceso que con cámara,
+                     * pero usando la URI elegida
+                     * desde la galería.
+                     */
+                    val actualizada =
+                        evidencia.copy(
+
+                            uriFotoActual =
+                                uri.toString(),
+
+                            fechaHora =
+                                LocalDateTime.now()
+                                    .format(
+                                        DateTimeFormatter.ofPattern(
+                                            "dd-MM-yyyy HH:mm"
+                                        )
+                                    ),
+
+                            responsable =
+                                preChequeo?.supervisor
+                                    ?: evidencia.responsable
+                        )
+
+
+                    /*
+                     * AQUÍ TAMBIÉN SE HACE EL PUT
+                     */
+                    vm.actualizarEvidencia(
+                        actualizada
+                    )
+
+
+                    evidenciaTarget = null
+                }
+            }
+        }
+
+
+
+    // GET evidencias desde Spring Boot
+    LaunchedEffect(id) {
+
+        vm.cargarEvidencias(id)
+    }
+    val evidenciasMostrar =
+
+        if (vm.evidenciasConsultadas) {
+            // Datos reales desde MySQL
+            vm.evidenciasServidor
+
+        } else {
+            // Mientras carga o si no hay conexión,
+            // usa los datos locales
+            preChequeo?.evidenciasEquipos
+                ?: emptyList()
+        }
+
+    // PANTALLA
+
 
     Column(
         modifier = Modifier
@@ -205,15 +419,120 @@ fun DetalleScreen(
             // ---- Evidencia Fotográfica de Equipos y Línea Base ----
             if (preChequeo.evidenciasEquipos.isNotEmpty()) {
                 SeccionBlanca("Evidencia Fotográfica de Equipos (Línea Base Zarpe)") {
-                    preChequeo.evidenciasEquipos.forEach { evidencia ->
+
+                    Text(
+                        text =
+                            if (vm.evidenciasConsultadas) {
+                                "${evidenciasMostrar.size} evidencia(s) registradas en servidor"
+                            } else {
+                                "Mostrando evidencias locales"
+                            },
+                        fontSize = 12.sp,
+                        color = TextoSuave
+                    )
+
+
+                    evidenciasMostrar.forEach { evidencia ->
+
                         TarjetaEvidenciaEquipo(
-                            evidencia = evidencia,
-                            onTomarFoto = {},
-                            onGaleria = {},
-                            onEliminar = {},
-                            editable = false
+                            evidencia =
+                                evidencia,
+
+                            // CÁMARA → PUT
+
+                            onTomarFoto = {
+
+                                /*
+                                 * Primero indicamos qué
+                                 * evidencia queremos cambiar.
+                                 */
+                                evidenciaTarget =
+                                    evidencia
+
+
+                                /*
+                                 * Creamos dónde se guardará
+                                 * la nueva foto.
+                                 */
+                                val uri =
+                                    crearUriFotoDetalle(
+                                        context
+                                    )
+
+
+                                uriFotoTomada =
+                                    uri
+
+
+                                /*
+                                 * Abrimos la cámara.
+                                 *
+                                 * Al terminar se ejecuta
+                                 * camaraEvidenciaLauncher,
+                                 * que hace el PUT.
+                                 */
+                                camaraEvidenciaLauncher
+                                    .launch(
+                                        uri
+                                    )
+                            },
+
+                            // GALERÍA → PUT
+
+
+                            onGaleria = {
+
+                                /*
+                                 * Guardamos cuál evidencia
+                                 * queremos actualizar.
+                                 */
+                                evidenciaTarget =
+                                    evidencia
+
+
+                                /*
+                                 * Abrimos selector de imágenes.
+                                 *
+                                 * Cuando selecciones una,
+                                 * galeriaEvidenciaLauncher
+                                 * hará el PUT.
+                                 */
+                                galeriaEvidenciaLauncher
+                                    .launch(
+
+                                        PickVisualMediaRequest(
+
+                                            ActivityResultContracts
+                                                .PickVisualMedia
+                                                .ImageOnly
+                                        )
+                                    )
+                            },
+
+                            // DELETE
+
+                            onEliminar = {
+
+                                /*
+                                 * DELETE
+                                 *
+                                 * /api/evidencias/{id}
+                                 */
+                                vm.eliminarEvidencia(
+                                    evidencia
+                                )
+                            },
+
+
+                            /*
+                             * Solo el Supervisor
+                             * puede modificar/eliminar.
+                             */
+                            editable =
+                                esSupervisor
                         )
                     }
+
                 }
             }
 
@@ -292,20 +611,55 @@ fun DetalleScreen(
 
         if (esSupervisor && preChequeo != null) {
             OutlinedButton(
-                onClick = { mostrarDialogoEliminar = true },
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFDC2626)),
+                onClick = {
+                    onEditar(
+                        preChequeo.id
+                    )
+                },
                 shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Morado
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
+
                 Icon(
-                    imageVector = Icons.Default.Delete,
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Editar",
+                    modifier = Modifier.size(20.dp)
+                )
+
+                Spacer(
+                    Modifier.width(6.dp)
+                )
+
+                Text(
+                    "Editar este Pre-chequeo",
+                    fontWeight = FontWeight.Bold
+                )
+
+            }
+            OutlinedButton(
+                onClick = {
+                    mostrarDialogoEliminar = true
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+
+                Icon(
+                    Icons.Default.Delete,
                     contentDescription = "Eliminar",
                     modifier = Modifier.size(20.dp)
                 )
-                Spacer(Modifier.width(6.dp))
-                Text("Eliminar este Pre-chequeo", fontWeight = FontWeight.Bold)
+
+                Text(
+                    "Eliminar este Pre-chequeo",
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
 
