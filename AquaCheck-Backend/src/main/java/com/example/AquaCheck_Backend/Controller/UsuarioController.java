@@ -1,5 +1,6 @@
 package com.example.AquaCheck_Backend.Controller;
 
+import com.example.AquaCheck_Backend.Dto.UsuarioRequestDTO;
 import com.example.AquaCheck_Backend.Model.Usuario;
 import com.example.AquaCheck_Backend.Service.UsuarioService;
 import jakarta.validation.Valid;
@@ -49,8 +50,9 @@ public class UsuarioController {
 
     @PostMapping
     public ResponseEntity<Usuario> registrar(
-            @RequestBody Usuario usuario
+            @RequestBody UsuarioRequestDTO dto
     ) {
+        Usuario usuario = convertirDto(dto);
         Usuario nuevo = service.registrar(usuario);
 
         return ResponseEntity.ok(nuevo);
@@ -63,9 +65,10 @@ public class UsuarioController {
     public ResponseEntity<Usuario> actualizar(
             @PathVariable Long id,
             @Valid
-            @RequestBody Usuario usuario
+            @RequestBody UsuarioRequestDTO dto
     ) {
 
+        Usuario usuario = convertirDto(dto);
         Usuario actualizado =
                 service.actualizar(id, usuario);
 
@@ -101,4 +104,52 @@ public class UsuarioController {
 
         return ResponseEntity.ok(aprobado);
     }
+
+
+    // CONVERTIR DTO → ENTIDAD
+    private Usuario convertirDto(
+            UsuarioRequestDTO dto
+    ) {
+
+        Usuario usuario =
+                new Usuario();
+
+        usuario.setUsuario(
+                dto.getUsuario()
+        );
+
+        usuario.setClave(
+                dto.getClave()
+        );
+
+        usuario.setNombre(
+                dto.getNombre()
+        );
+
+        usuario.setRol(
+                dto.getRol()
+        );
+
+        usuario.setRut(
+                dto.getRut()
+        );
+
+        usuario.setTelefono(
+                dto.getTelefono()
+        );
+
+        usuario.setCorreo(
+                dto.getCorreo()
+        );
+
+        usuario.setAprobada(
+                dto.getAprobada()
+        );
+
+        return usuario;
+    }
+
+
+
+
 }
