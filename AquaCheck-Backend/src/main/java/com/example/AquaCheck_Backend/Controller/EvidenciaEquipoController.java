@@ -1,8 +1,9 @@
 package com.example.AquaCheck_Backend.Controller;
 
-
+import com.example.AquaCheck_Backend.Dto.EvidenciaEquipoRequestDTO;
 import com.example.AquaCheck_Backend.Model.EvidenciaEquipo;
 import com.example.AquaCheck_Backend.Service.EvidenciaEquipoService;
+
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,8 +42,11 @@ public class EvidenciaEquipoController {
 
     //POST registrar Evidencia de equipo
     @PostMapping
-    public ResponseEntity<EvidenciaEquipo> registrar(@Valid @RequestBody EvidenciaEquipo evidenciaEquipo){
-        EvidenciaEquipo nueva = service.crearEvidenciaEquipo(evidenciaEquipo);
+    public ResponseEntity<EvidenciaEquipo> registrar(@Valid @RequestBody EvidenciaEquipoRequestDTO dto){
+
+        EvidenciaEquipo evidencia = convertirDto(dto);
+
+        EvidenciaEquipo nueva = service.crearEvidenciaEquipo(evidencia);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(nueva);
@@ -50,11 +54,14 @@ public class EvidenciaEquipoController {
 
     //PUT actualizar evidencias
     @PutMapping("/{id}")
-    public ResponseEntity<EvidenciaEquipo> actualizar(@PathVariable Long id, @Valid @RequestBody EvidenciaEquipo evidencia){
-        EvidenciaEquipo actualizado = service.actualizarEvidencia(id,evidencia);
+    public ResponseEntity<EvidenciaEquipo> actualizar(@PathVariable Long id, @Valid @RequestBody EvidenciaEquipoRequestDTO dto){
+
+        EvidenciaEquipo evidencia = convertirDto(dto);
+
+        EvidenciaEquipo actualizada = service.actualizarEvidencia(id,evidencia);
 
         return  ResponseEntity
-                .ok(actualizado);
+                .ok(actualizada);
 
     }
 
@@ -65,5 +72,48 @@ public class EvidenciaEquipoController {
         service.eliminar(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    // CONVERTIR DTO → ENTIDAD
+    private EvidenciaEquipo convertirDto(
+            EvidenciaEquipoRequestDTO dto
+    ) {
+
+        EvidenciaEquipo evidencia =
+                new EvidenciaEquipo();
+
+        evidencia.setIdEquipo(
+                dto.getIdEquipo()
+        );
+
+        evidencia.setNombreEquipo(
+                dto.getNombreEquipo()
+        );
+
+        evidencia.setObligatoria(
+                dto.getObligatoria()
+        );
+
+        evidencia.setUriFotoActual(
+                dto.getUriFotoActual()
+        );
+
+        evidencia.setFotoReferencia(
+                dto.getFotoReferencia()
+        );
+
+        evidencia.setFechaHora(
+                dto.getFechaHora()
+        );
+
+        evidencia.setIdFaena(
+                dto.getIdFaena()
+        );
+
+        evidencia.setResponsable(
+                dto.getResponsable()
+        );
+
+        return evidencia;
     }
 }
