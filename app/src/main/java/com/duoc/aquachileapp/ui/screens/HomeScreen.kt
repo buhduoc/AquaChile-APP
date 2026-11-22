@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.duoc.aquachileapp.model.Resultado
 import com.duoc.aquachileapp.ui.components.TarjetaPreChequeo
@@ -27,6 +29,7 @@ import com.duoc.aquachileapp.ui.theme.Morado
 import com.duoc.aquachileapp.ui.theme.TextoSuave
 import com.duoc.aquachileapp.viewmodel.CuentasViewModel
 import com.duoc.aquachileapp.viewmodel.HistorialViewModel
+import com.duoc.aquachileapp.viewmodel.WeatherViewModel
 
 data class InfoClima(
     val ciudad: String,
@@ -48,15 +51,104 @@ fun HomeScreen(
     val registros = historial.registros
     val pendientes = cuentas.pendientes.size
 
-    var ciudadIndex by rememberSaveable { mutableStateOf(1) }
+    val weatherVm: WeatherViewModel = viewModel()
+    var ciudadIndex by rememberSaveable { mutableStateOf(0) }
     var mostrarDialogoClima by rememberSaveable { mutableStateOf(false) }
 
     val ciudadesClima = listOf(
-        InfoClima("Centro Puerto Montt", "16°", "Parcialmente Nublado", "H: 18°  L: 11°", listOf(Color(0xFF4a6fa5), Color(0xFF16222a))),
-        InfoClima("Centro Osorno", "22°", "Soleado y Despejado", "H: 25°  L: 14°", listOf(Color(0xFF00c6ff), Color(0xFF0072ff))),
-        InfoClima("Centro Calbuco", "12°", "Lluvia Moderada", "H: 14°  L: 9°", listOf(Color(0xFF232526), Color(0xFF414345)))
+
+        InfoClima(
+            ciudad = "Centro Puerto Montt",
+            temperatura = "",
+            condicion = "",
+            maxMin = "",
+            gradientColors = listOf(
+                Color(0xFF45698F),
+                Color(0xFF162A3A)
+            )
+        ),
+
+        InfoClima(
+            ciudad = "Centro Osorno",
+            temperatura = "",
+            condicion = "",
+            maxMin = "",
+            gradientColors = listOf(
+                Color(0xFF4F8DD6),
+                Color(0xFF214B72)
+            )
+        ),
+
+        InfoClima(
+            ciudad = "Centro Calbuco",
+            temperatura = "",
+            condicion = "",
+            maxMin = "",
+            gradientColors = listOf(
+                Color(0xFF23525D),
+                Color(0xFF142D35)
+            )
+        )
     )
-    val climaActual = ciudadesClima[ciudadIndex]
+
+    val ciudadSeleccionada =
+        ciudadesClima.getOrElse(ciudadIndex) {
+            ciudadesClima.first()
+        }
+
+
+    LaunchedEffect(
+        ciudadSeleccionada.ciudad
+    ) {
+        weatherVm.cargarClima(
+            ciudadSeleccionada.ciudad
+        )
+    }
+
+
+
+    val datosApi =
+        weatherVm.clima
+
+    val maxima =
+        datosApi
+            ?.daily
+            ?.maxima
+            ?.firstOrNull()
+
+    val minima =
+        datosApi
+            ?.daily
+            ?.minima
+            ?.firstOrNull()
+
+
+    val climaActual =
+        ciudadSeleccionada.copy(
+
+            temperatura =
+                datosApi
+                    ?.current
+                    ?.temperatura
+                    ?.let {
+                        "${it.toInt()}°"
+                    }
+                    ?: "--°",
+
+            condicion =
+                weatherVm.descripcion(
+                    datosApi
+                        ?.current
+                        ?.weatherCode
+                ),
+
+            maxMin =
+                "H: ${
+                    maxima?.toInt() ?: "--"
+                }°  L: ${
+                    minima?.toInt() ?: "--"
+                }°"
+        )
 
     if (mostrarDialogoClima) {
         AlertDialog(
