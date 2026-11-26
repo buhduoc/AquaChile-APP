@@ -1,18 +1,26 @@
+# Android Studio y Gradle
 *.iml
-.gradle
+.gradle/
 /local.properties
-/.idea/caches
-/.idea/libraries
+local.properties
+/.idea/caches/
+/.idea/libraries/
 /.idea/modules.xml
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
+/.idea/deploymentTargetSelector.xml
+/.idea/discord.xml
+/.idea/runConfigurations/
+/.run/
+
+# Archivos de compilación
+/build/
+**/build/
+/captures/
+.externalNativeBuild/
+.cxx/
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
 
 # Seguridad y credenciales
 .env
@@ -26,12 +34,13 @@ local.properties
 keystore.properties
 secrets.properties
 
+# Configuraciones privadas del backend
+application-local.yml
+application-local.properties
+
 # Fotografías y almacenamiento local
-uploads/
-data/
-
-
-.idea/discord.xml
+/uploads/
+/data/
 
 # Reportes locales de pruebas
 /evidencias/01-pruebas-unitarias/

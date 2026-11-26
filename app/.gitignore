@@ -1,1 +1,50 @@
-/build
+# Android Studio y Gradle
+*.iml
+.gradle/
+/local.properties
+local.properties
+/.idea/caches/
+/.idea/libraries/
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+/.idea/deploymentTargetSelector.xml
+/.idea/discord.xml
+/.idea/runConfigurations/
+/.run/
+
+# Archivos de compilación
+/build/
+**/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+.DS_Store
+
+# Seguridad y credenciales
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+keystore.properties
+secrets.properties
+
+# Configuraciones privadas del backend
+application-local.yml
+application-local.properties
+
+# Fotografías y almacenamiento local
+/uploads/
+/data/
+
+# Reportes locales de pruebas
+/evidencias/01-pruebas-unitarias/
+/evidencias/02-cobertura-jacoco/
+/evidencias/03-compose-ui-test/
+/evidencias/reportes-finales/
+/evidencias/reportes-version-previa/
