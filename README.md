@@ -1,11 +1,12 @@
+# AquaCheck — AquaChile APP
+
+**Versión 1.0.0 | Android · Kotlin · Spring Boot · MySQL**
+
 > **Caso académico:** AquaCheck Buceo / AquaChile APP  
 > **Asignatura:** Desarrollo de Aplicaciones Móviles  
 > **Institución:** Duoc UC Sede Puerto Montt  
 > **Socio Formador:** AquaChile  
 
-# AquaCheck — AquaChile APP
-
-**Versión 1.0.0 | Android · Kotlin · Spring Boot · MySQL**
 
 AquaCheck es una aplicación móvil orientada al registro y seguimiento preventivo de las actividades de buceo. Permite gestionar prechequeos, evidencias fotográficas, evaluaciones de seguridad y bitácoras post-inmersión, con soporte para trabajo sin conexión.
 
