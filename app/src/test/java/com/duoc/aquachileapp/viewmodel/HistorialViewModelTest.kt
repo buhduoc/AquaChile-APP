@@ -56,10 +56,38 @@ class HistorialViewModelTest {
   vm.actualizar(item.copy(id=0)); advanceUntilIdle(); coVerify(exactly=0){api.actualizarPreChequeo(any(),any())}
   coEvery { api.actualizarPreChequeo(7,any()) } returns dto.copy(observaciones="Editada"); vm.actualizar(item); advanceUntilIdle(); coVerify { dao.insertar(match { it.observaciones=="Editada" }) }
   coEvery { api.actualizarPreChequeo(7,any()) } throws IOException(); vm.actualizar(item); advanceUntilIdle()
-  vm.eliminar(0); advanceUntilIdle(); coVerify(exactly=0){api.eliminarPreChequeo(any())}
-  coEvery { dao.eliminarPorId(7) } returns Unit; coEvery { api.eliminarPreChequeo(7) } returns Unit; vm.eliminar(item); advanceUntilIdle(); coVerify(exactly=1){dao.eliminarPorId(7)}
-  coEvery { api.eliminarPreChequeo(7) } throws http(404); vm.eliminar(7); advanceUntilIdle(); coVerify(exactly=2){dao.eliminarPorId(7)}
-  coEvery { api.eliminarPreChequeo(7) } throws http(500); vm.eliminar(7); advanceUntilIdle(); coEvery { api.eliminarPreChequeo(7) } throws IOException(); vm.eliminar(7); advanceUntilIdle(); coVerify(exactly=2){dao.eliminarPorId(7)}
+  // El ID local y el ID remoto deben ser distintos.
+  val entidad = flow.value.single().copy(estadoSincronizacion="SINCRONIZADO", idServidor=42L)
+  coEvery { dao.obtenerPorId(0) } returns null
+  vm.eliminar(0); advanceUntilIdle()
+  assertEquals("Pre-chequeo no encontrado", vm.errorServidor)
+  coEvery { dao.obtenerPorId(7) } returns entidad.copy(estadoSincronizacion="PENDIENTE")
+  vm.eliminar(7); advanceUntilIdle()
+  assertEquals("El pre-chequeo debe sincronizarse antes de eliminarlo", vm.errorServidor)
+  coEvery { dao.obtenerPorId(7) } returns entidad.copy(idServidor=null)
+  vm.eliminar(7); advanceUntilIdle()
+  assertEquals("El pre-chequeo debe sincronizarse antes de eliminarlo", vm.errorServidor)
+  coVerify(exactly=0) { api.eliminarPreChequeo(any()) }
+  coVerify(exactly=0) { dao.eliminarPorId(any()) }
+  coEvery { dao.obtenerPorId(7) } returns entidad
+  coEvery { dao.eliminarPorId(7) } returns Unit
+  coEvery { api.eliminarPreChequeo(42L) } returns Unit
+  vm.eliminar(item); advanceUntilIdle()
+  assertNull(vm.errorServidor)
+  coVerifyOrder { api.eliminarPreChequeo(42L); dao.eliminarPorId(7) }
+  coVerify(exactly=1) { dao.eliminarPorId(7) }
+  coEvery { api.eliminarPreChequeo(42L) } throws http(404)
+  vm.eliminar(7); advanceUntilIdle()
+  assertEquals("Error al eliminar: HTTP 404", vm.errorServidor)
+  coEvery { api.eliminarPreChequeo(42L) } throws http(500)
+  vm.eliminar(7); advanceUntilIdle()
+  assertEquals("Error al eliminar: HTTP 500", vm.errorServidor)
+  coEvery { api.eliminarPreChequeo(42L) } throws IOException()
+  vm.eliminar(7); advanceUntilIdle()
+  assertEquals("No se pudo eliminar el pre-chequeo", vm.errorServidor)
+  coVerify(exactly=1) { dao.eliminarPorId(7) }
+  coVerify(exactly=4) { api.eliminarPreChequeo(42L) }
+  coVerify(exactly=0) { api.eliminarPreChequeo(7L) }
  }
  @Test fun evidencias()=runTest {
   val vm=HistorialViewModel(app); advanceUntilIdle(); val e=EvidenciaEquipoDto(3,"maleta_aire","Maleta",true,null,null,null,"7","Buzo")

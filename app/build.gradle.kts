@@ -16,7 +16,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
-        val apiUrl = providers.gradleProperty("AQUA_API_URL").orElse("http://10.0.2.2:8080/").get()
+        val apiUrl = providers.gradleProperty("AQUA_API_URL").orElse("https://aquachile-app-production.up.railway.app/").get()
         require(apiUrl.endsWith("/"))
         buildConfigField("String", "AQUA_API_URL", "\"$apiUrl\"")
 

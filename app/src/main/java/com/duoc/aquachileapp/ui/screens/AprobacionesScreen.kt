@@ -68,6 +68,7 @@ fun AprobacionesScreen(
     val pendientes = cuentas.pendientes
     val todasLasCuentas = cuentas.cuentas
     val registros = historial.registros
+    val errorEliminacion = historial.errorServidor
 
     Column(
         modifier = Modifier
@@ -149,6 +150,13 @@ fun AprobacionesScreen(
                         )
                     }
                 )
+            }
+
+            if (tabSeleccionada == 2) {
+                errorEliminacion?.let { mensaje ->
+                    Text(text = mensaje, color = Color(0xFFDC2626),
+                        style = MaterialTheme.typography.bodySmall)
+                }
             }
 
             when (tabSeleccionada) {
@@ -391,6 +399,7 @@ fun AprobacionesScreen(
                                         ) {
                                             OutlinedButton(
                                                 onClick = { preChequeoAEliminar = preChequeo },
+                                                enabled = !sinInternet && historial.estadoPorId(preChequeo.id) == "SINCRONIZADO",
                                                 colors = ButtonDefaults.outlinedButtonColors(
                                                     contentColor = Color(0xFFDC2626)
                                                 ),
@@ -459,6 +468,7 @@ fun AprobacionesScreen(
                         historial.eliminar(preChequeo)
                         preChequeoAEliminar = null
                     },
+                    enabled = !sinInternet && historial.estadoPorId(preChequeo.id) == "SINCRONIZADO",
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
                 ) {
                     Text("Eliminar", color = Color.White)

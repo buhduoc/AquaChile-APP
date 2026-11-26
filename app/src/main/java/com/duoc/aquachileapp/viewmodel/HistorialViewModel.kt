@@ -336,81 +336,35 @@ class HistorialViewModel(application: Application) : AndroidViewModel(applicatio
 
     //ELIMINAR PRE_CHEQUEO
 
-    fun eliminar(
-        id: Int
-    ) {
-
+    fun eliminar(id: Int) {
         viewModelScope.launch {
-
-            if (id <= 0) {
-
-                Log.e(
-                    "API_PRECHEQUEO",
-                    "No se puede eliminar un PreChequeo sin ID válido"
-                )
-
-                return@launch
-            }
-
-
             try {
-
-                // =====================================
-                // 1. ELIMINAR DEL SERVIDOR
-                // =====================================
-
-                repository.eliminar(
-                    id.toLong()
-                )
-
-
-                // =====================================
-                // 2. ELIMINAR DE ROOM
-                // =====================================
-
-                dao.eliminarPorId(id)
-
-
-                Log.d(
-                    "API_PRECHEQUEO",
-                    "PreChequeo eliminado correctamente. ID: $id"
-                )
-
-
-            } catch (e: retrofit2.HttpException) {
-
-                // Si Spring Boot devuelve 404,
-                // significa que ya no existe en MySQL.
-                if (e.code() == 404) {
-
-                    dao.eliminarPorId(id)
-
-                    Log.d(
-                        "API_PRECHEQUEO",
-                        "PreChequeo ya no existía en servidor. Eliminado de Room. ID: $id"
-                    )
-
-                } else {
-
-                    Log.e(
-                        "API_PRECHEQUEO",
-                        "Error HTTP al eliminar: ${e.code()}"
-                    )
+                errorServidor = null
+                val entidad = dao.obtenerPorId(id)
+                if (entidad == null) {
+                    errorServidor = "Pre-chequeo no encontrado"
+                    return@launch
                 }
-
-
-
+                val idServidor = entidad.idServidor
+                if (entidad.estadoSincronizacion != "SINCRONIZADO" || idServidor == null) {
+                    errorServidor = "El pre-chequeo debe sincronizarse antes de eliminarlo"
+                    return@launch
+                }
+                Log.d("API_PRECHEQUEO", "Eliminando ID local=$id, ID servidor=$idServidor")
+                repository.eliminar(idServidor)
+                dao.eliminarPorId(id)
+                Log.d("API_PRECHEQUEO", "Pre-chequeo eliminado correctamente")
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: retrofit2.HttpException) {
+                errorServidor = "Error al eliminar: HTTP ${e.code()}"
+                Log.e("API_PRECHEQUEO", "Error HTTP al eliminar: ${e.code()}", e)
             } catch (e: Exception) {
-
-                Log.e(
-                    "API_PRECHEQUEO",
-                    "Error al eliminar PreChequeo: ${e.message}"
-                )
+                errorServidor = "No se pudo eliminar el pre-chequeo"
+                Log.e("API_PRECHEQUEO", "Error al eliminar pre-chequeo", e)
             }
         }
     }
-
-
 
     // DELETE - RECIBIENDO OBJETO
 
