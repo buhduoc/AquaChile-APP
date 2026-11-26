@@ -137,11 +137,12 @@ fun LoginScreen(
 
                 Button(
                     onClick = {
-                        val usuario = vm.iniciarSesion(cuentas)
-                        if (usuario != null) {
+                        vm.iniciarSesion { usuario ->
+                            cuentas.cargarUsuarios()
                             onLoginExitoso(usuario)
                         }
                     },
+                    enabled = !vm.cargando,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AzulLogin,
                         contentColor = Color.White

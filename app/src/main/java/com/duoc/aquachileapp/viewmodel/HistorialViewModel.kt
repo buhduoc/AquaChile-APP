@@ -20,6 +20,7 @@ import com.duoc.aquachileapp.model.EvidenciaEquipo
 import com.duoc.aquachileapp.model.ItemChecklist
 import com.duoc.aquachileapp.model.PreChequeo
 import com.duoc.aquachileapp.repository.EvidenciaEquipoRepository
+import com.duoc.aquachileapp.sync.SyncManager
 import com.duoc.aquachileapp.repository.PreChequeoRepository
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -51,6 +52,10 @@ class HistorialViewModel(application: Application) : AndroidViewModel(applicatio
     val registros =
         mutableStateListOf<PreChequeo>()
 
+    private val estadosRoom = androidx.compose.runtime.mutableStateMapOf<Int, String>()
+
+    fun estadoPorId(id: Int): String? = estadosRoom[id]
+
 
     val evidenciasServidor = mutableStateListOf<EvidenciaEquipo>()
 
@@ -77,6 +82,8 @@ class HistorialViewModel(application: Application) : AndroidViewModel(applicatio
             dao.obtenerTodos()
                 .collectLatest { entities ->
 
+                    estadosRoom.clear()
+                    entities.forEach { estadosRoom[it.id] = it.estadoSincronizacion }
                     registros.clear()
 
                     registros.addAll(
@@ -88,8 +95,12 @@ class HistorialViewModel(application: Application) : AndroidViewModel(applicatio
         }
 
 
-        // Actualizar desde Spring Boot
-        cargarDesdeServidor()
+        // Descarga automatica pausada hasta implementar una fusion segura
+        // entre IDs locales y IDs del servidor.
+        // cargarDesdeServidor()
+
+        // Reintenta los registros pendientes al abrir el historial.
+        SyncManager.programar(application)
     }
 
 
@@ -209,7 +220,7 @@ class HistorialViewModel(application: Application) : AndroidViewModel(applicatio
 
         // IMPORTANTE:
         // usamos agregar() y no dao.insertar()
-        // para guardar en Room + Spring Boot.
+        // para guardar primero en Room.
         agregar(nuevoPreChequeo)
 
 
@@ -218,117 +229,32 @@ class HistorialViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
 
-    // POST - ANDROID → ROOM → SPRING BOOT
-
-    fun agregar(
-        preChequeo: PreChequeo
-    ) {
-
+    // GUARDADO OFFLINE-FIRST: ANDROID -> ROOM
+    // El envio al backend se implementara despues con WorkManager.
+    fun agregar(preChequeo: PreChequeo) {
         viewModelScope.launch {
-
-            // 1. Guardar primero localmente
-            val idLocal =
-                dao.insertar(
-                    preChequeo
-                        .copy(id = 0)
-                        .toEntity()
-                )
-
-
             try {
-
-                //1. POST PRE-CHEQUEO
-                val respuesta =
-                    repository.crear(
-                        preChequeo.toDto()
+                val entidad = preChequeo
+                    .copy(id = 0)
+                    .toEntity()
+                    .copy(
+                        estadoSincronizacion = "PENDIENTE",
+                        idServidor = null,
+                        ultimoErrorSincronizacion = null
                     )
 
-                // =====================================
-                // 2. POST EVIDENCIAS
-                // =====================================
-
-                val idFaenaServidor =
-                    respuesta.id?.toString()
-
-
-                if (idFaenaServidor != null) {
-
-                    preChequeo.evidenciasEquipos
-
-                        // Solo mandar evidencias
-                        // que realmente tienen fotografía
-                        .filter {
-                            !it.uriFotoActual.isNullOrBlank()
-                        }
-
-                        .forEach { evidencia ->
-
-                            try {
-
-                                val evidenciaGuardada =
-                                    evidenciaRepository.crear(
-
-                                        evidencia.toDto(
-
-                                            idFaenaServidor =
-                                                idFaenaServidor,
-
-                                            responsableDefecto =
-                                                preChequeo.buzo
-                                        )
-                                    )
-
-
-                                Log.d(
-                                    "API_EVIDENCIA",
-                                    "Evidencia guardada: ${evidenciaGuardada.nombreEquipo} | ID: ${evidenciaGuardada.id}"
-                                )
-
-
-                            } catch (e: Exception) {
-
-                                Log.e(
-                                    "API_EVIDENCIA",
-                                    "Error guardando ${evidencia.nombreEquipo}: ${e.message}"
-                                )
-                            }
-                        }
-
-
-                }
-                // 3. Eliminar registro temporal local
-                dao.eliminarPorId(
-                    idLocal.toInt()
-                )
-
-
-                // 4. Guardar usando el ID real del servidor
-                val preChequeoServidor =
-                    respuesta.toPreChequeo()
-
-
-                dao.insertar(
-                    preChequeoServidor.toEntity()
-                )
-
+                val idLocal = dao.insertar(entidad)
+                // Solo programar despues de confirmar el guardado en Room.
+                SyncManager.programar(getApplication())
+                errorServidor = null
 
                 Log.d(
-                    "API_PRECHEQUEO",
-                    "PreChequeo sincronizado. ID servidor: ${respuesta.id}"
+                    "OFFLINE_SYNC",
+                    "Guardado local ID=$idLocal UUID=${entidad.uuid}"
                 )
-
-
             } catch (e: Exception) {
-
-                /*
-                 * Si falla la API,
-                 * permanece el registro local.
-                 */
-
-                Log.e(
-                    "API_PRECHEQUEO",
-                    "Guardado local. Pendiente de sincronizar: ${e.message}"
-                )
+                errorServidor = "No se pudo guardar el prechequeo localmente"
+                Log.e("OFFLINE_SYNC", "Error guardando en Room", e)
             }
         }
     }

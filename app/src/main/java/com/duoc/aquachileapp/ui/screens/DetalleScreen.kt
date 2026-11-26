@@ -3,7 +3,8 @@ package com.duoc.aquachileapp.ui.screens
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
+import android.content.ActivityNotFoundException
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -127,7 +128,7 @@ private fun crearUriFotoDetalle(
 
     val carpeta =
         File(
-            context.cacheDir,
+            context.filesDir,
             "fotos"
         ).apply {
             mkdirs()
@@ -262,7 +263,7 @@ fun DetalleScreen(
     val galeriaEvidenciaLauncher =
         rememberLauncherForActivityResult(
             contract =
-                ActivityResultContracts.PickVisualMedia()
+                ActivityResultContracts.OpenDocument()
         ) { uri ->
 
             if (uri != null) {
@@ -271,7 +272,8 @@ fun DetalleScreen(
                     evidenciaTarget
 
 
-                if (evidencia != null) {
+                val copiaLocal = copiarAdjuntoLocal(context, uri)
+                if (evidencia != null && copiaLocal != null) {
 
                     /*
                      * Mismo proceso que con cámara,
@@ -282,7 +284,7 @@ fun DetalleScreen(
                         evidencia.copy(
 
                             uriFotoActual =
-                                uri.toString(),
+                                copiaLocal,
 
                             fechaHora =
                                 LocalDateTime.now()
@@ -384,6 +386,7 @@ fun DetalleScreen(
                 }
             }
 
+            Text("Evaluación preventiva: no constituye autorización definitiva de zarpe.", modifier = Modifier.padding(12.dp), color = Color(0xFF475569))
             // ---- Checklist ----
             SeccionBlanca("Checklist") {
                 preChequeo.items.forEachIndexed { indice, item ->
@@ -497,16 +500,11 @@ fun DetalleScreen(
                                  * galeriaEvidenciaLauncher
                                  * hará el PUT.
                                  */
-                                galeriaEvidenciaLauncher
-                                    .launch(
-
-                                        PickVisualMediaRequest(
-
-                                            ActivityResultContracts
-                                                .PickVisualMedia
-                                                .ImageOnly
-                                        )
-                                    )
+                                try {
+                                    galeriaEvidenciaLauncher.launch(arrayOf("image/*"))
+                                } catch (_: ActivityNotFoundException) {
+                                    Toast.makeText(context, "No hay selector de archivos disponible", Toast.LENGTH_LONG).show()
+                                }
                             },
 
                             // DELETE
@@ -645,6 +643,7 @@ fun DetalleScreen(
                 onClick = {
                     mostrarDialogoEliminar = true
                 },
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFDC2626)),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
@@ -707,7 +706,37 @@ fun DetalleScreen(
                 Text("Validación de Seguridad", fontWeight = FontWeight.Bold)
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    val estadoSync = vm.estadoPorId(id)
+                    Text("Evaluación preventiva local", fontWeight = FontWeight.Bold, color = TextoOscuro)
+                    Text(
+                        text = when (estadoSync) {
+                            "SINCRONIZADO" -> "Registro sincronizado"
+                            "ERROR" -> "Pendiente de sincronizar (error)"
+                            "SINCRONIZANDO" -> "Sincronización en curso"
+                            "PENDIENTE" -> "Pendiente de sincronizar"
+                            else -> "Sincronización no confirmada"
+                        },
+                        fontSize = 12.sp,
+                        color = TextoSuave
+                    )
+                    Surface(
+                        color = Color(0xFFFEE2E2),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFF991B1B))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Aprobación definitiva bloqueada", fontWeight = FontWeight.Bold, color = Color(0xFF991B1B), fontSize = 13.sp)
+                            }
+                            Text("Este resultado no constituye una autorización de zarpe ni de buceo. Datos de salud ficticios: solo demostración.", fontSize = 12.sp, color = Color(0xFF991B1B))
+                        }
+                    }
                     Surface(
                         color = valRes.semaforo.color.copy(alpha = 0.15f),
                         shape = RoundedCornerShape(12.dp),

@@ -12,7 +12,7 @@ class HomeViewModel: ViewModel() {
     var seccion by mutableStateOf(AppSection.PRECHEQUEO)
         private set
 
-    var usuario by mutableStateOf<Usuario?>(null)
+    var usuario by mutableStateOf<Usuario?>(com.duoc.aquachileapp.data.Remote.SesionSegura.usuario)
         private set
 
     fun seleccionar(item: AppSection) {
@@ -24,6 +24,7 @@ class HomeViewModel: ViewModel() {
     }
 
     fun cerrarSesion() {
+        com.duoc.aquachileapp.data.Remote.SesionSegura.cerrar()
         usuario = null
     }
 }

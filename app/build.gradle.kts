@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    jacoco
 }
 
 android {
@@ -14,7 +15,10 @@ android {
         minSdk = 27
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
+        val apiUrl = providers.gradleProperty("AQUA_API_URL").orElse("http://10.0.2.2:8080/").get()
+        require(apiUrl.endsWith("/"))
+        buildConfigField("String", "AQUA_API_URL", "\"$apiUrl\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -37,13 +41,16 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 dependencies {
+    implementation("androidx.datastore:datastore-preferences:1.1.7")
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.core.ktx)
+    implementation("androidx.work:work-runtime-ktx:2.10.5")
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -62,10 +69,41 @@ dependencies {
     ksp(libs.room.compiler)
     implementation(libs.gson)
     testImplementation(libs.junit)
+    testImplementation("io.mockk:mockk:1.13.13")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+android {
+    buildTypes {
+        debug {
+            enableUnitTestCoverage = true
+        }
+    }
+}
+
+tasks.register<org.gradle.testing.jacoco.tasks.JacocoReport>("jacocoDebugReport") {
+    dependsOn("testDebugUnitTest")
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+    val logic = listOf("com/duoc/aquachileapp/viewmodel/**", "com/duoc/aquachileapp/repository/**")
+    classDirectories.setFrom(
+        fileTree(layout.buildDirectory.dir("tmp/kotlin-classes/debug")) { include(logic) },
+        fileTree(layout.buildDirectory.dir("intermediates/javac/debug/compileDebugJavaWithJavac/classes")) { include(logic) }
+    )
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+    executionData.setFrom(fileTree(layout.buildDirectory) {
+        include("jacoco/testDebugUnitTest.exec", "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+    })
 }

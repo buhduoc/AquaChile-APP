@@ -14,3 +14,19 @@
 .cxx
 local.properties
 
+# Seguridad y credenciales
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+keystore.properties
+secrets.properties
+
+# Fotografías y almacenamiento local
+uploads/
+data/
+

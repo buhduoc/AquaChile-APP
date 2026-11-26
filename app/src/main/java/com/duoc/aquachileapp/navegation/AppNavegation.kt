@@ -26,6 +26,8 @@ import com.duoc.aquachileapp.ui.components.iconoDe
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import com.duoc.aquachileapp.ui.components.recordarSinInternet
 import com.duoc.aquachileapp.ui.components.colorItemNav
 import com.duoc.aquachileapp.ui.theme.Morado
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -51,6 +53,7 @@ fun AppNavigation(
     bitacora: BitacoraViewModel = viewModel()
 ) {
 
+    val contextoSesion = androidx.compose.ui.platform.LocalContext.current
     val navController = rememberNavController()
 
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -63,6 +66,11 @@ fun AppNavigation(
     )
 
     val scope = rememberCoroutineScope()
+    val sinInternet = recordarSinInternet()
+
+    LaunchedEffect(rutaActual) {
+        if (rutaActual == "home" || rutaActual == "login") drawerState.close()
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -79,7 +87,7 @@ fun AppNavigation(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(FondoBarra)
+                            .background(if (sinInternet) Brush.horizontalGradient(listOf(Color(0xFF475569), Color(0xFF94A3B8))) else FondoBarra)
                             .statusBarsPadding()
                             .padding(horizontal = 20.dp, vertical = 24.dp)
                     ) {
@@ -190,7 +198,10 @@ fun AppNavigation(
                 if (mostrarMenu) {
 
                     TopAppBar(
-                        modifier = Modifier.background(FondoBarra),
+                        modifier = Modifier.background(
+                            if (sinInternet) Brush.horizontalGradient(listOf(Color(0xFF475569), Color(0xFF94A3B8)))
+                            else FondoBarra
+                        ),
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = Color.Transparent,
                             scrolledContainerColor = Color.Transparent,
@@ -199,7 +210,7 @@ fun AppNavigation(
                         ),
                         title = {
                             Text(
-                                text = "Hola, ${vm.usuario?.nombre ?: "Usuario"}",
+                                text = if (sinInternet) "Modo Offline" else "Hola, ${vm.usuario?.nombre ?: "Usuario"}",
                                 color = Color.White,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.SemiBold
@@ -329,7 +340,7 @@ fun AppNavigation(
 
             NavHost(
                 navController = navController,
-                startDestination = "login",
+                startDestination = if (vm.usuario != null) "home" else "login",
                 modifier = if (mostrarMenu) Modifier.padding(padding) else Modifier
             ) {
 
@@ -558,6 +569,7 @@ fun AppNavigation(
                         },
                         onLoginExitoso = { usuario ->
                             vm.iniciarSesion(usuario)
+                            com.duoc.aquachileapp.sync.SyncManager.programar(contextoSesion)
                             navController.navigate("home") {
                                 popUpTo("login") {
                                     inclusive = true

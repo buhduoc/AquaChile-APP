@@ -54,7 +54,7 @@ fun Fotos(
                 modifier = Modifier.size(96.dp)
             ) {
                 AsyncImage(
-                    model = foto,
+                    model = com.duoc.aquachileapp.data.Remote.RetrofitClient.foto(foto),
                     contentDescription = "Evidencia",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -129,7 +129,7 @@ fun DialogoZoomImagen(
             contentAlignment = Alignment.Center
         ) {
             AsyncImage(
-                model = modelAUsar,
+                model = com.duoc.aquachileapp.data.Remote.RetrofitClient.foto(modelAUsar),
                 contentDescription = "Imagen ampliada",
                 contentScale = ContentScale.Fit,
                 modifier = Modifier

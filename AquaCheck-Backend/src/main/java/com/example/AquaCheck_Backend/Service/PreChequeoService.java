@@ -5,6 +5,8 @@ import com.example.AquaCheck_Backend.Model.ItemCheckList;
 import com.example.AquaCheck_Backend.Model.PreChequeo;
 import com.example.AquaCheck_Backend.Repository.PreChequeoRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.dao.DataIntegrityViolationException;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -42,12 +44,32 @@ public class PreChequeoService {
     //Crear preChequo
     public PreChequeo crearPreChequeo(PreChequeo preChequeo) {
 
-        //El ID lo genera MySQL
+        // El ID lo genera MySQL. El UUID identifica reintentos del mismo envío.
         preChequeo.setId(null);
-
-
+        String uuid = preChequeo.getUuid();
+        if (uuid == null || uuid.isBlank()) {
+            // Compatibilidad con clientes antiguos sin UUID.
+            uuid = UUID.randomUUID().toString();
+        } else {
+            try {
+                uuid = UUID.fromString(uuid).toString();
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "UUID inválido");
+            }
+        }
+        preChequeo.setUuid(uuid);
+        final String uuidFinal = uuid;
+        var existente = repository.findByUuid(uuidFinal);
+        if (existente.isPresent()) {
+            return existente.get();
+        }
         validarPreChequeo(preChequeo);
-        return repository.save(preChequeo);
+        try {
+            return repository.saveAndFlush(preChequeo);
+        } catch (DataIntegrityViolationException e) {
+            // Si dos peticiones llegaron a la vez, la restricción UNIQUE protege MySQL.
+            return repository.findByUuid(uuidFinal).orElseThrow(() -> e);
+        }
     }
 
     //Actualizar PreChequeo

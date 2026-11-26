@@ -14,6 +14,10 @@ public class PreChequeo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "uuid", unique = true, length = 36)
+    private String uuid;
+
+
     @NotBlank(message = "El centro es Obligatorio")
     private String centro;
 
@@ -121,6 +125,10 @@ public class PreChequeo {
         this.puntajeEscuelaCalbuco = puntajeEscuelaCalbuco;
     }
 
+
+    public String getUuid() { return uuid; }
+
+    public void setUuid(String uuid) { this.uuid = uuid; }
 
     public Long getId() {
         return id;

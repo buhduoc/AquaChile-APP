@@ -318,10 +318,11 @@ fun ValidacionScreen(
                 )
             }
 
-            // Botón de Aprobación Final
+            Text("Evaluación local: no constituye autorización definitiva de zarpe.", style = MaterialTheme.typography.bodySmall)
+            // Indicador de validación preventiva; no autoriza zarpe.
             Button(
                 onClick = {},
-                enabled = !resultado.estaBloqueado,
+                enabled = false,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (resultado.estaBloqueado) Color(0xFFDC2626) else Morado,
                     disabledContainerColor = Color(0xFFFCA5A5),
@@ -342,7 +343,7 @@ fun ValidacionScreen(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = if (resultado.estaBloqueado) "Aprobación Bloqueada por Seguridad" else "Aprobar Validación de Seguridad",
+                        text = if (resultado.estaBloqueado) "Aprobación Bloqueada por Seguridad" else "Validación preventiva local",
                         fontWeight = FontWeight.Bold
                     )
                 }

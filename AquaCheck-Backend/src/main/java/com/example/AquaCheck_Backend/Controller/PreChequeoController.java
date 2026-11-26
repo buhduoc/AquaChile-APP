@@ -75,6 +75,8 @@ public class PreChequeoController {
         PreChequeo preChequeo =
                 new PreChequeo();
 
+        preChequeo.setUuid(dto.getUuid());
+
         preChequeo.setCentro(
                 dto.getCentro()
         );

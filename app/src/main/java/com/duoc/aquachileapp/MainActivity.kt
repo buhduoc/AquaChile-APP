@@ -10,6 +10,8 @@ import com.duoc.aquachileapp.ui.theme.AquaChileAppTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.duoc.aquachileapp.data.Remote.SesionSegura.iniciar(applicationContext)
+        coil.Coil.setImageLoader(coil.ImageLoader.Builder(this).okHttpClient(com.duoc.aquachileapp.data.Remote.RetrofitClient.cliente).build())
         enableEdgeToEdge()
         setContent {
             AquaChileAppTheme {

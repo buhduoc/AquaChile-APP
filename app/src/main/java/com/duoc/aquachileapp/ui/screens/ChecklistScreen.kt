@@ -25,21 +25,12 @@ import com.duoc.aquachileapp.viewmodel.AquaCheckViewmodel
 import java.io.File
 
 private fun crearUriFoto(context: Context): Uri {
-    val carpeta = File(context.cacheDir, "fotos").apply { mkdirs() }
+    val carpeta = File(context.filesDir, "fotos").apply { mkdirs() }
     val archivo = File.createTempFile("pre_", ".jpg", carpeta)
     return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", archivo)
 }
 
-private fun nombreDe(context: Context, uri: String): String {
-    val u = Uri.parse(uri)
-    context.contentResolver.query(u, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
-        if (c.moveToFirst()) {
-            val i = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            if (i >= 0) return c.getString(i)
-        }
-    }
-    return u.lastPathSegment ?: "Archivo"
-}
+private fun nombreDe(context: Context, uri: String): String = nombreArchivo(context, uri)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +46,7 @@ fun ChecklistScreen(
     }
 
     val archivos = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
-        uris.forEach { viewModel.agregarAdjunto(it.toString()) }
+        uris.forEach { uri -> copiarAdjuntoLocal(context, uri)?.let { viewModel.agregarAdjunto(it) } }
     }
 
     Column(

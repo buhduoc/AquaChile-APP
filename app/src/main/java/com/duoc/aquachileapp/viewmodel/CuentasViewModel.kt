@@ -15,22 +15,8 @@ import kotlinx.coroutines.launch
 
 class CuentasViewModel : ViewModel() {
 
-    // REPOSITORY - CONEXIÓN CON SPRING BOOT
     private val repository = UsuarioRepository()
-
-
-
-    // LISTA DE CUENTAS
-
-
-    /*
-     * Antes las cuentas estaban escritas manualmente aquí.
-     *
-     * Ahora se cargarán desde Spring Boot / MySQL.
-     */
     val cuentas = mutableStateListOf<Cuenta>()
-
-
 
     // ESTADOS DE LA API
 
@@ -47,7 +33,7 @@ class CuentasViewModel : ViewModel() {
 
 
     init {
-        cargarUsuarios()
+
     }
 
 
@@ -56,6 +42,8 @@ class CuentasViewModel : ViewModel() {
 
 
     fun cargarUsuarios() {
+
+
 
         viewModelScope.launch {
 
@@ -155,7 +143,7 @@ class CuentasViewModel : ViewModel() {
         // Revisar si ya está cargado localmente
         if (
             cuentas.any {
-                it.usuario.equals(
+                limpiar(it.usuario).equals(
                     id,
                     ignoreCase = true
                 )
@@ -400,52 +388,6 @@ class CuentasViewModel : ViewModel() {
      * - usuario / RUT
      * - correo
      */
-
-    fun buscar(
-        usuario: String,
-        clave: String
-    ): Cuenta? {
-
-        val texto =
-            usuario.trim()
-
-
-        val id =
-            limpiar(texto)
-
-
-        return cuentas.firstOrNull { cuenta ->
-
-
-            // Comparar usuario / RUT
-            val coincideUsuario =
-
-                limpiar(cuenta.usuario)
-                    .equals(
-                        id,
-                        ignoreCase = true
-                    )
-
-
-            // Comparar correo
-            val coincideCorreo =
-
-                cuenta.correo
-                    .trim()
-                    .equals(
-                        texto,
-                        ignoreCase = true
-                    )
-
-
-            // Debe coincidir usuario/correo
-            // y además la contraseña
-            (coincideUsuario || coincideCorreo) &&
-                    cuenta.clave == clave
-        }
-    }
-
-
 
     // LIMPIAR USUARIO / RUT
 

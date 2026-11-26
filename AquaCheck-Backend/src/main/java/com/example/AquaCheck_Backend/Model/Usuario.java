@@ -71,6 +71,7 @@ public class Usuario {
         this.usuario = usuario;
     }
 
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
     public String getClave() {
         return clave;
     }

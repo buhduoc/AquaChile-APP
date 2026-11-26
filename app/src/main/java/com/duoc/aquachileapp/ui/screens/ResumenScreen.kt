@@ -123,7 +123,7 @@ fun ResumenScreen(
                     .fillMaxWidth()
                     .clickable { onDetalle(preChequeo.id) }
             ) {
-                TarjetaPreChequeo(preChequeo)
+                TarjetaPreChequeo(preChequeo, historial.estadoPorId(preChequeo.id))
             }
         }
 

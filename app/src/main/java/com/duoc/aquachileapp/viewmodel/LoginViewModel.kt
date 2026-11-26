@@ -3,6 +3,10 @@ package com.duoc.aquachileapp.viewmodel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
+import com.duoc.aquachileapp.data.Remote.RetrofitClient
+import com.duoc.aquachileapp.data.Remote.LoginRequest
 import androidx.lifecycle.ViewModel
 import com.duoc.aquachileapp.model.Usuario
 
@@ -34,43 +38,36 @@ class LoginViewModel : ViewModel() {
         contrasenaVisible = !contrasenaVisible
     }
 
-    fun iniciarSesion(cuentas: CuentasViewModel): Usuario? {
-        val u = usuario.trim()
-        val p = contrasena.trim()
+    var cargando by mutableStateOf(false)
+        private set
 
+    fun iniciarSesion(onSuccess: (Usuario) -> Unit) {
+        if (cargando) return
+        val u = usuario.trim()
+        val p = contrasena
         if (u.isBlank() || p.isBlank()) {
             error = "Completa tu correo/RUT y contraseña"
-            return null
+            return
         }
-
-        val existeUsuario = cuentas.cuentas.any {
-            it.usuario.equals(u, ignoreCase = true) || it.correo.equals(u, ignoreCase = true)
+        cargando = true
+        viewModelScope.launch {
+            try {
+                val perfil = RetrofitClient.api.login(LoginRequest(u, p))
+                error = null
+                contrasena = ""
+                val u = Usuario(nombre = perfil.nombre, rol = perfil.rol, rut = perfil.rut, correo = perfil.correo, telefono = perfil.telefono)
+                com.duoc.aquachileapp.data.Remote.SesionSegura.guardar(requireNotNull(perfil.token), u)
+                onSuccess(u)
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e
+            } catch (e: retrofit2.HttpException) {
+                error = when (e.code()) {
+                    401 -> "Usuario o contraseña incorrectos"
+                    403 -> "Tu cuenta está pendiente de aprobación por un supervisor"
+                    else -> "Error del servidor"
+                }
+            } catch (e: Exception) {
+                error = "No se pudo conectar con el servidor"
+            } finally { cargando = false }
         }
-
-        if (!existeUsuario) {
-            error = "El correo o RUT ingresado no está registrado"
-            return null
-        }
-
-        val cuenta = cuentas.buscar(u, p)
-
-        if (cuenta == null) {
-            error = "La contraseña ingresada es incorrecta"
-            return null
-        }
-
-        if (!cuenta.aprobada) {
-            error = "Tu cuenta está pendiente de aprobación por un supervisor"
-            return null
-        }
-
-        error = null
-        return Usuario(
-            nombre = cuenta.nombre,
-            rol = cuenta.rol,
-            rut = cuenta.rut,
-            telefono = cuenta.telefono,
-            correo = cuenta.correo
-        )
     }
 }

@@ -168,7 +168,7 @@ fun TarjetaEvidenciaEquipo(
                         ) {
                             if (evidencia.uriFotoActual != null) {
                                 AsyncImage(
-                                    model = evidencia.uriFotoActual,
+                                    model = com.duoc.aquachileapp.data.Remote.RetrofitClient.foto(evidencia.uriFotoActual),
                                     contentDescription = "Foto capturada",
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
@@ -405,7 +405,7 @@ fun DialogoComparacionLineaBase(
 
                         if (evidencia.uriFotoActual != null) {
                             AsyncImage(
-                                model = evidencia.uriFotoActual,
+                                model = com.duoc.aquachileapp.data.Remote.RetrofitClient.foto(evidencia.uriFotoActual),
                                 contentDescription = "Foto capturada actual",
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier

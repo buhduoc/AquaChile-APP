@@ -4,9 +4,12 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
+import android.content.ActivityNotFoundException
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
+import com.duoc.aquachileapp.ui.components.recordarSinInternet
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -41,6 +44,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import com.duoc.aquachileapp.data.local.PreferenciasCentro
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -70,31 +76,29 @@ import com.duoc.aquachileapp.viewmodel.NuevoViewModel
 import java.io.File
 
 private fun crearUriFoto(context: Context): Uri {
-    val carpeta = File(context.cacheDir, "fotos").apply { mkdirs() }
+    val carpeta = File(context.filesDir, "fotos").apply { mkdirs() }
     val archivo = File.createTempFile("pre_", ".jpg", carpeta)
     return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", archivo)
 }
 
 fun esImagen(context: Context, uriString: String): Boolean {
-    val uri = Uri.parse(uriString)
-    val mimeType = context.contentResolver.getType(uri)
-    if (mimeType != null) {
-        return mimeType.startsWith("image/")
-    }
-    val extension = uriString.substringAfterLast('.', "").lowercase()
-    return extension in listOf("jpg", "jpeg", "png", "webp", "gif", "bmp") ||
-            uriString.contains("fotos") || uriString.contains("pre_")
+    val mimeType = runCatching { context.contentResolver.getType(Uri.parse(uriString)) }.getOrNull()
+    if (mimeType != null) return mimeType.startsWith("image/")
+    return uriString.substringAfterLast('.', "").lowercase() in listOf("jpg", "jpeg", "png", "webp", "gif", "bmp") || uriString.contains("fotos")
 }
 
 fun nombreArchivo(context: Context, uriString: String): String {
     val uri = Uri.parse(uriString)
-    context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
-        if (c.moveToFirst()) {
+    return try {
+        context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
             val i = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            if (i >= 0) return c.getString(i)
-        }
+            if (c.moveToFirst() && i >= 0) c.getString(i) else null
+        } ?: uri.lastPathSegment ?: "Archivo adjunto"
+    } catch (e: SecurityException) {
+        "Archivo sin permiso de acceso"
+    } catch (e: Exception) {
+        "Archivo no disponible"
     }
-    return uri.lastPathSegment ?: "Archivo adjunto"
 }
 
 @Composable
@@ -104,6 +108,10 @@ fun PreChequeoScreen(
     onGuardar: (PreChequeo) -> Unit
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val sinInternet = recordarSinInternet()
+    val evaluados = vm.items.count { it.estado != Estado.PENDIENTE }
+    val totalItems = vm.items.size
     var uriFotoTomada by rememberSaveable { mutableStateOf<Uri?>(null) }
     var itemParaFotoIndex by rememberSaveable { mutableStateOf<Int?>(null) }
     var equipoTargetId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -114,6 +122,10 @@ fun PreChequeoScreen(
         if (vm.idEnEdicion == null) {
 
             vm.prepararDatos(usuario)
+            val centroGuardado = PreferenciasCentro.leer(context)
+            if (vm.idEnEdicion == null && vm.centro == "Centro Puerto Montt" && centroGuardado != null) {
+                vm.centro = centroGuardado
+            }
         }
     }
 
@@ -135,10 +147,10 @@ fun PreChequeoScreen(
     }
 
     val selectorFotos = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickMultipleVisualMedia()
+        ActivityResultContracts.OpenMultipleDocuments()
     ) { uris ->
         uris.forEach { uri ->
-            val str = uri.toString()
+            val str = copiarAdjuntoLocal(context, uri) ?: return@forEach
             if (equipoTargetId != null) {
                 vm.adjuntarFotoEquipo(equipoTargetId!!, str)
             } else if (itemParaFotoIndex != null) {
@@ -153,19 +165,34 @@ fun PreChequeoScreen(
         ActivityResultContracts.GetMultipleContents()
     ) { uris ->
         uris.forEach { uri ->
-            val str = uri.toString()
+            val str = copiarAdjuntoLocal(context, uri) ?: return@forEach
             if (str !in vm.fotos) {
                 vm.fotos.add(str)
             }
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(FondoBarra)
-            .verticalScroll(rememberScrollState())
-    ) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        if (totalItems > 0) {
+            Column(
+                modifier = Modifier.fillMaxWidth().background(Color.White)
+                    .padding(horizontal = 22.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                Text("$evaluados de $totalItems ítems evaluados", fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF334155), fontSize = 12.sp)
+                LinearProgressIndicator(
+                    progress = { evaluados.toFloat() / totalItems.toFloat() },
+                    modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
+                    color = Color(0xFF64748B), trackColor = Color(0xFFE5E7EB)
+                )
+            }
+        }
+        Column(
+            modifier = Modifier.fillMaxSize()
+                .background(if (sinInternet) Brush.verticalGradient(listOf(Color(0xFF64748B), Color.White)) else FondoBarra)
+                .verticalScroll(rememberScrollState())
+        ) {
 
         Column(
             modifier = Modifier
@@ -187,7 +214,10 @@ fun PreChequeoScreen(
 
             CampoDesplegableCentro(
                 valor = vm.centro,
-                alSeleccionar = { vm.centro = it },
+                alSeleccionar = { centro ->
+                    vm.centro = centro
+                    scope.launch { PreferenciasCentro.guardar(context, centro) }
+                },
                 sobreMorado = true
             )
             Campo(vm.buzo, { vm.buzo = it }, "Buzo", sobreMorado = true)
@@ -491,9 +521,11 @@ fun PreChequeoScreen(
                     onGaleria = {
                         equipoTargetId = evidencia.idEquipo
                         itemParaFotoIndex = null
-                        selectorFotos.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
+                        try {
+                            selectorFotos.launch(arrayOf("image/*"))
+                        } catch (_: ActivityNotFoundException) {
+                            Toast.makeText(context, "No hay selector de archivos disponible", Toast.LENGTH_LONG).show()
+                        }
                     },
                     onEliminar = {
                         vm.eliminarFotoEquipo(evidencia.idEquipo)
@@ -522,36 +554,16 @@ fun PreChequeoScreen(
                     onGaleria = {
                         equipoTargetId = null
                         itemParaFotoIndex = indice
-                        selectorFotos.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
+                        try {
+                            selectorFotos.launch(arrayOf("image/*"))
+                        } catch (_: ActivityNotFoundException) {
+                            Toast.makeText(context, "No hay selector de archivos disponible", Toast.LENGTH_LONG).show()
+                        }
                     },
                     onEliminarFoto = { indiceFoto ->
                         vm.eliminarFotoItem(indice, indiceFoto)
                     }
                 )
-            }
-
-            val evaluados = vm.items.count { it.estado != Estado.PENDIENTE }
-            val totalItems = vm.items.size
-            if (totalItems > 0) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = "$evaluados de $totalItems ítems evaluados",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF374151)
-                    )
-                    LinearProgressIndicator(
-                        progress = { evaluados.toFloat() / totalItems.toFloat() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                            .clip(RoundedCornerShape(4.dp)),
-                        color = Color(0xFF0F4C81),
-                        trackColor = Color(0xFFE5E7EB)
-                    )
-                }
             }
 
             Campo(vm.observaciones, { vm.observaciones = it }, "Observaciones generales")
@@ -581,9 +593,11 @@ fun PreChequeoScreen(
                     onClick = {
                         equipoTargetId = null
                         itemParaFotoIndex = null
-                        selectorFotos.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
+                        try {
+                            selectorFotos.launch(arrayOf("image/*"))
+                        } catch (_: ActivityNotFoundException) {
+                            Toast.makeText(context, "No hay selector de archivos disponible", Toast.LENGTH_LONG).show()
+                        }
                     }
                 ) {
                     Text("Galería")
@@ -698,7 +712,7 @@ fun PreChequeoScreen(
                 },
                 enabled = !valRes.estaBloqueado,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (valRes.estaBloqueado) Color(0xFFDC2626) else Morado,
+                    containerColor = if (valRes.estaBloqueado) Color(0xFFDC2626) else if (sinInternet) Color(0xFF64748B) else Morado,
                     disabledContainerColor = Color(0xFFFCA5A5),
                     disabledContentColor = Color.White
                 ),
@@ -729,5 +743,6 @@ fun PreChequeoScreen(
                 }
             }
         }
+    }
     }
 }

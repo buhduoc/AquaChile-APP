@@ -136,7 +136,7 @@ fun HistorialScreen(
                         .fillMaxWidth()
                         .clickable { onDetalle(preChequeo.id) }
                 ) {
-                    TarjetaPreChequeo(preChequeo)
+                    TarjetaPreChequeo(preChequeo, vm.estadoPorId(preChequeo.id))
                 }
             }
         }

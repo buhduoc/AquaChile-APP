@@ -41,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -48,6 +49,7 @@ import com.duoc.aquachileapp.model.Cuenta
 import com.duoc.aquachileapp.model.PreChequeo
 import com.duoc.aquachileapp.ui.components.EtiquetaResultado
 import com.duoc.aquachileapp.ui.components.FondoBarra
+import com.duoc.aquachileapp.ui.components.recordarSinInternet
 import com.duoc.aquachileapp.ui.theme.Morado
 import com.duoc.aquachileapp.viewmodel.CuentasViewModel
 import com.duoc.aquachileapp.viewmodel.HistorialViewModel
@@ -61,6 +63,8 @@ fun AprobacionesScreen(
     var cuentaAEliminar by remember { mutableStateOf<Cuenta?>(null) }
     var preChequeoAEliminar by remember { mutableStateOf<PreChequeo?>(null) }
 
+    val sinInternet = recordarSinInternet()
+    val colorPrincipal = if (sinInternet) Color(0xFF64748B) else Morado
     val pendientes = cuentas.pendientes
     val todasLasCuentas = cuentas.cuentas
     val registros = historial.registros
@@ -68,7 +72,7 @@ fun AprobacionesScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(FondoBarra)
+            .background(if (sinInternet) Brush.horizontalGradient(listOf(Color(0xFF475569), Color(0xFF94A3B8))) else FondoBarra)
     ) {
         Column(
             modifier = Modifier
@@ -105,7 +109,7 @@ fun AprobacionesScreen(
             TabRow(
                 selectedTabIndex = tabSeleccionada,
                 containerColor = Color.White,
-                contentColor = Morado,
+                contentColor = colorPrincipal,
                 indicator = { tabPositions ->
                     if (tabSeleccionada < tabPositions.size) {
                         TabRowDefaults.SecondaryIndicator(
@@ -236,7 +240,7 @@ fun AprobacionesScreen(
                                             Button(
                                                 onClick = { cuentas.aprobar(cuenta) },
                                                 colors = ButtonDefaults.buttonColors(
-                                                    containerColor = Morado,
+                                                    containerColor = colorPrincipal,
                                                     contentColor = Color.White
                                                 ),
                                                 shape = RoundedCornerShape(12.dp)

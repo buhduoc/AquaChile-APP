@@ -5,6 +5,13 @@ import retrofit2.http.*
 
 //esto corresponde a GET http://localhost:8080/api/usuarios
 interface ApiService {
+    @POST("api/auth/login")
+    suspend fun login(@Body datos: LoginRequest): UsuarioDto
+
+    @Multipart
+    @POST("api/fotos")
+    suspend fun subirFoto(@Part archivo: okhttp3.MultipartBody.Part): Map<String, String>
+
 
     //USUARIO
     @GET("api/usuarios")

@@ -11,6 +11,7 @@ import java.util.List;
 public class UsuarioService {
 
     private final UsuarioRepository repository;
+    private final org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
 
     public UsuarioService(UsuarioRepository repository) {
         this.repository = repository;
@@ -54,6 +55,7 @@ public class UsuarioService {
         }
 
         usuario.setUsuario(usuarioLimpio);
+        usuario.setClave(encoder.encode(usuario.getClave()));
 
         // Una cuenta creada desde registro será Buzo
         usuario.setRol("Buzo");
@@ -90,7 +92,7 @@ public class UsuarioService {
                 );
             }
 
-            usuario.setClave(datos.getClave());
+            usuario.setClave(encoder.encode(datos.getClave()));
         }
 
 

@@ -26,6 +26,7 @@ import androidx.navigation.NavHostController
 import com.duoc.aquachileapp.model.Resultado
 import com.duoc.aquachileapp.ui.components.TarjetaPreChequeo
 import com.duoc.aquachileapp.ui.theme.Morado
+import com.duoc.aquachileapp.ui.components.recordarSinInternet
 import com.duoc.aquachileapp.ui.theme.TextoSuave
 import com.duoc.aquachileapp.viewmodel.CuentasViewModel
 import com.duoc.aquachileapp.viewmodel.HistorialViewModel
@@ -48,6 +49,7 @@ fun HomeScreen(
     cuentas: CuentasViewModel
 ) {
 
+    val sinInternet = recordarSinInternet()
     val registros = historial.registros
     val pendientes = cuentas.pendientes.size
 
@@ -245,6 +247,7 @@ fun HomeScreen(
             onClick = {
                 navController.navigate("prechequeo")
             },
+            colors = ButtonDefaults.buttonColors(containerColor = if (sinInternet) Color(0xFF64748B) else Morado),
             shape = RoundedCornerShape(24.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -281,7 +284,7 @@ fun HomeScreen(
                         navController.navigate("detalle/${preChequeo.id}")
                     }
             ) {
-                TarjetaPreChequeo(preChequeo)
+                TarjetaPreChequeo(preChequeo, historial.estadoPorId(preChequeo.id))
             }
         }
 
@@ -305,7 +308,7 @@ private fun TarjetaClima(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.linearGradient(info.gradientColors))
+                .background(Brush.linearGradient(if (recordarSinInternet()) listOf(Color(0xFF475569), Color(0xFF64748B)) else info.gradientColors))
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             Row(
@@ -368,7 +371,7 @@ private fun Contador(
             .width(220.dp)
             .height(125.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Morado)
+        colors = CardDefaults.cardColors(containerColor = if (recordarSinInternet()) Color(0xFF64748B) else Morado)
     ) {
         Column(
             modifier = Modifier

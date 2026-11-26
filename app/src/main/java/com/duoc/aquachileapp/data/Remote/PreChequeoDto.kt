@@ -3,6 +3,8 @@ package com.duoc.aquachileapp.data.Remote
 import com.duoc.aquachileapp.model.Estado
 import com.duoc.aquachileapp.model.ItemChecklist
 import com.duoc.aquachileapp.model.PreChequeo
+import com.duoc.aquachileapp.data.local.PreChequeoEntity
+import com.duoc.aquachileapp.data.local.toDomain
 
 
 data class ItemChecklistDto(
@@ -33,7 +35,8 @@ data class PreChequeoDto(
     val alturaCm: Double,
     val examenPreocupacionalVigente: Boolean,
     val testEsfuerzoVigente: Boolean,
-    val puntajeEscuelaCalbuco: Int
+    val puntajeEscuelaCalbuco: Int,
+    val uuid: String? = null
 )
 
 fun PreChequeoDto.toPreChequeo(): PreChequeo {
@@ -87,7 +90,7 @@ fun PreChequeo.toDto(): PreChequeoDto {
 
     return PreChequeoDto(
 
-        id = if (id == 0) null else id.toLong(),
+        id = null, // Nunca enviar el ID local como ID del servidor
 
         centro = centro,
         fecha = fecha,
@@ -132,3 +135,7 @@ fun PreChequeo.toDto(): PreChequeoDto {
     )
 }
 
+
+// Conversión para el envío offline: mantiene el UUID estable de Room.
+fun PreChequeoEntity.toSyncDto(): PreChequeoDto =
+    toDomain().toDto().copy(id = null, uuid = uuid)

@@ -6,13 +6,14 @@ data class UsuarioDto(
 
     val id: Long? = null,
     val usuario: String,
-    val clave: String,
+    val clave: String?,
     val nombre: String,
     val rol: String,
     val rut: String,
     val telefono: String,
     val correo: String,
-    val aprobada: Boolean
+    val aprobada: Boolean,
+    val token: String? = null
 )
 
 
@@ -21,7 +22,7 @@ fun UsuarioDto.toCuenta(): Cuenta {
     return Cuenta(
         id =id,
         usuario = usuario,
-        clave = clave,
+        clave = clave.orEmpty(),
         nombre = nombre,
         rol = rol,
         rut = rut,
@@ -45,3 +46,4 @@ fun Cuenta.toDto(): UsuarioDto {
         aprobada = aprobada
     )
 }
+ data class LoginRequest(val usuario: String, val clave: String)

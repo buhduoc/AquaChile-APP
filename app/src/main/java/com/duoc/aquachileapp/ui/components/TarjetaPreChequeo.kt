@@ -1,3 +1,4 @@
+
 package com.duoc.aquachileapp.ui.components
 
 import androidx.compose.foundation.background
@@ -28,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
 import com.duoc.aquachileapp.model.PreChequeo
 import com.duoc.aquachileapp.model.Resultado
 import com.duoc.aquachileapp.ui.theme.Morado
@@ -48,32 +50,54 @@ fun EtiquetaResultado(resultado: Resultado) {
         shape = RoundedCornerShape(50)
     ) {
         Text(
-            text = resultado.texto,
+            text = "Evaluación local: ${resultado.texto}",
             color = Color.White,
             fontSize = 10.sp,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
+            modifier = Modifier.padding(
+                horizontal = 10.dp,
+                vertical = 3.dp
+            )
         )
     }
 }
 
-/** Tarjeta estilo "task item": bloque morado con icono + textos + menú. */
 @Composable
-fun TarjetaPreChequeo(preChequeo: PreChequeo) {
+fun TarjetaPreChequeo(
+    preChequeo: PreChequeo,
+    estadoSincronizacion: String? = null
+) {
+
+    // Detectar el estado actual de la conexión.
+    val sinInternet = recordarSinInternet()
+
+    // Cambiar el color según la conexión.
+    val colorPrincipal = if (sinInternet) {
+        Color(0xFF64748B)
+    } else {
+        Morado
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp
+        )
     ) {
         Row(
             modifier = Modifier.height(IntrinsicSize.Min),
             verticalAlignment = Alignment.CenterVertically
         ) {
+
+            // Franja lateral.
             Box(
                 modifier = Modifier
                     .width(52.dp)
                     .fillMaxHeight()
-                    .background(Morado),
+                    .background(colorPrincipal),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -83,29 +107,93 @@ fun TarjetaPreChequeo(preChequeo: PreChequeo) {
                 )
             }
 
+            // Información del prechequeo.
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                    .padding(
+                        horizontal = 14.dp,
+                        vertical = 12.dp
+                    ),
                 verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
+
                 Text(
                     text = "${preChequeo.centro} · ${preChequeo.buzo}",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium
                 )
-                Text(preChequeo.fecha, fontSize = 11.sp, color = TextoSuave)
-                Text("Supervisor: ${preChequeo.supervisor}", fontSize = 11.sp, color = TextoSuave)
+
+                Text(
+                    text = preChequeo.fecha,
+                    fontSize = 11.sp,
+                    color = TextoSuave
+                )
+
+                Text(
+                    text = "Supervisor: ${preChequeo.supervisor}",
+                    fontSize = 11.sp,
+                    color = TextoSuave
+                )
+
                 if (preChequeo.fotos.isNotEmpty()) {
-                    Text("Adjuntos: ${preChequeo.fotos.size}", fontSize = 11.sp, color = TextoSuave)
+                    Text(
+                        text = "Adjuntos: ${preChequeo.fotos.size}",
+                        fontSize = 11.sp,
+                        color = TextoSuave
+                    )
                 }
+
                 EtiquetaResultado(preChequeo.resultado)
+                Text("Sin autorización definitiva", fontSize = 10.sp, color = TextoSuave)
+
+                // Estado de sincronización.
+                when (estadoSincronizacion) {
+
+                    "PENDIENTE",
+                    "ERROR",
+                    "SINCRONIZANDO" -> {
+
+                        Surface(
+                            color = Color(0xFFE2E8F0),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = "Guardado local · Pendiente de sincronizar",
+                                color = Color(0xFF334155),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(
+                                    horizontal = 8.dp,
+                                    vertical = 5.dp
+                                )
+                            )
+                        }
+                    }
+
+                    "SINCRONIZADO" -> {
+                        Text(
+                            text = "Sincronizado",
+                            fontSize = 10.sp,
+                            color = Color(0xFF15803D)
+                        )
+                    }
+
+                    "LEGADO_REVISAR" -> {
+                        Text(
+                            text = "Estado de sincronización por revisar",
+                            fontSize = 10.sp,
+                            color = Color(0xFF92400E)
+                        )
+                    }
+                }
             }
 
+            // Icono de opciones.
             Icon(
                 imageVector = Icons.Filled.MoreVert,
                 contentDescription = null,
-                tint = Morado,
+                tint = colorPrincipal,
                 modifier = Modifier.padding(end = 10.dp)
             )
         }

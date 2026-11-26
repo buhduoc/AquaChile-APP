@@ -11,6 +11,13 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PreChequeoRequestDTO {
 
+    private String uuid;
+
+    public String getUuid() { return uuid; }
+
+    public void setUuid(String uuid) { this.uuid = uuid; }
+
+
     @NotBlank(message = "El centro es obligatorio")
     private String centro;
 
